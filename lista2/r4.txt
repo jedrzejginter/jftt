@@ -1,0 +1,10 @@
+= 20
+= -13
+= -3
+= 4
+= 512
+Błąd: za mała liczba argumentów
+Błąd: za mała liczba operatorów
+Błąd: zły symbol "."
+= -1
+= 1

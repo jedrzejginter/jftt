@@ -1,0 +1,12 @@
+/* comment */
+/*
+   *
+*
+this is comment */
+
+/*
+weqf
+*/
+/* "abcd" */
+
+"/* x \" */"

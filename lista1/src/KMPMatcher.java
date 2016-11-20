@@ -3,7 +3,7 @@ public class KMPMatcher {
 	public void match(char[] text, char[] pattern) {
 		int n = text.length - 1;
 		int m = pattern.length - 1;
-		int[] pi = this.computePrefixFunction(pattern);
+		int[] pi = this.computePrefixArray(pattern);
 		int q = 0;
 		
 		for (int i = 1; i <= n; i++) {
@@ -16,13 +16,13 @@ public class KMPMatcher {
 			}
 			
 			if (q == m) {
-				System.out.println("Wzorzec występuje z przesunięciem " + (i - m));
+				System.out.println("\tWzorzec występuje z przesunięciem " + (i - m));
 				q = pi[q];
 			}
 		}
 	}
 	
-	public int[] computePrefixFunction(char[] pattern) {
+	public int[] computePrefixArray(char[] pattern) {
 		int m = pattern.length - 1;
 		int[] pi = new int[m + 1];
 		int k = 0;
@@ -45,10 +45,20 @@ public class KMPMatcher {
 	}
 	
 	public static void main(String[] args) {
+		if (args.length < 2) {
+			System.out.println("\n\tUżycie: <TEKST> <WZORZEC>\n");
+			System.exit(-1);
+		}
+		
 		KMPMatcher kmpm = new KMPMatcher();
 		
-		String text = "abababababababa";
-		String pattern = "abab";
+		String text = args[0];
+		String pattern = args[1];
+		
+		if (pattern.length() == 0) {
+			System.out.println("\n\tWzorzec nie może być pusty\n");
+			System.exit(-1);
+		}
 		
 		kmpm.match((" "+text).toCharArray(), (" "+pattern).toCharArray());
 	}
