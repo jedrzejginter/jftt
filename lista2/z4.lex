@@ -17,7 +17,6 @@ struct Stack {
 struct Stack stack;
 char error = '*';
 char bad_char;
-void printStack();
 
 void new_equation() {
 	for (int i = 0; i < stack.size; i++) {
@@ -91,12 +90,6 @@ void calc(char *val) {
 	}
 }
 
-void printStack() {
-	for (int i = stack.size - 1; i >= 0; i--) {
-		printf("%d: %d\n", i, stack.items[i]->value);
-	}
-}
-
 %}
 
 %%
@@ -123,10 +116,6 @@ int main(int argc, char** argv) {
 			printf("Błąd: dzielenie przez 0\n");
 		} else if (error == 'A') {
 			printf("Błąd: za mała liczba argumentów\n");
-		} else if (error == 'S') {
-			printf("Błąd: stos jest pusty\n");
-		} else if (error == 'S') {
-			printf("Błąd: stos jest pusty\n");
 		} else if (stack.size > 0) {
 			printf("Błąd: za mała liczba operatorów\n");
 		} else {

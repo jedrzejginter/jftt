@@ -1866,10 +1866,6 @@ int main(int argc, char** argv) {
 			printf("Błąd: dzielenie przez 0\n");
 		} else if (error == 'A') {
 			printf("Błąd: za mała liczba argumentów\n");
-		} else if (error == 'S') {
-			printf("Błąd: stos jest pusty\n");
-		} else if (error == 'S') {
-			printf("Błąd: stos jest pusty\n");
 		} else if (stack.size > 0) {
 			printf("Błąd: za mała liczba operatorów\n");
 		} else {
