@@ -1,9 +1,18 @@
-xxx
-sd
-hxx
-c ss
-xxx
-pp x f psf
-x
----> Liczba linii: 7
----> Liczba słów: 12
+#1 -
+#2 spacja na początku
+#3 tab na początku
+#4 tab i spacja na początku
+#5 tab, spacja i tab pomiędzy dwoma 555
+#6 puste linie przed 666
+#7 białe znaki na końcu
+111
+222
+333
+444
+555 555
+666
+777
+>
+> Liczba linii: 14
+> Liczba słów: 42
+>

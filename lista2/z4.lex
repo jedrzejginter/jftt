@@ -100,11 +100,11 @@ void printStack() {
 %}
 
 %%
-[\%\*\+\-\/\^]	{ calc(yytext); operators++; }
-\-?[0-9]+	{ push_raw(yytext); arguments++; }
-[ \t]+	{}
+[\%\*\+\-\/\^]	{ printf("%s", yytext); calc(yytext); operators++; }
+\-?[0-9]+	{ printf("%s", yytext); push_raw(yytext); arguments++; }
+[ \t]+	{ printf(" "); }
 \n	{ return 1; }
-.	{ error = 'C'; bad_char = *yytext; }
+.	{ printf("%s", yytext); error = 'C'; bad_char = *yytext; }
 %%
 
 int main(int argc, char** argv) {
@@ -112,6 +112,8 @@ int main(int argc, char** argv) {
 
 	while (yylex()) {
 		int result = pop();
+
+		printf("\n");
 
 		if (error == 'C') {
 			printf("Błąd: zły symbol \"%c\"\n", bad_char);
@@ -131,8 +133,7 @@ int main(int argc, char** argv) {
 			printf("= %d\n", result);
 		}
 
-		//printf("\n");
-
+		printf("\n");
 		new_equation();
 	}
 

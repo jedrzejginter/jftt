@@ -1,12 +1,16 @@
-xxx
-	sd
-	 hxx
-c		 ss
-	 xxx
-pp				 x	 f			p
+#1 -
+#2 spacja na początku
+#3 tab na początku
+#4 tab i spacja na początku
+#5 tab, spacja i tab pomiędzy dwoma 555
+#6 puste linie przed 666
+#7 białe znaki na końcu
+111
+ 222
+	333
+	 444
+555	 	555
 
 
-
-sf
-	 
-x
+666
+777

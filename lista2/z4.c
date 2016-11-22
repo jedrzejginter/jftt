@@ -821,17 +821,17 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 YY_RULE_SETUP
 #line 103 "z4.lex"
-{ calc(yytext); operators++; }
+{ printf("%s", yytext); calc(yytext); operators++; }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
 #line 104 "z4.lex"
-{ push_raw(yytext); arguments++; }
+{ printf("%s", yytext); push_raw(yytext); arguments++; }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
 #line 105 "z4.lex"
-{}
+{ printf(" "); }
 	YY_BREAK
 case 4:
 /* rule 4 can match eol */
@@ -842,7 +842,7 @@ YY_RULE_SETUP
 case 5:
 YY_RULE_SETUP
 #line 107 "z4.lex"
-{ error = 'C'; bad_char = *yytext; }
+{ printf("%s", yytext); error = 'C'; bad_char = *yytext; }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
@@ -1856,6 +1856,8 @@ int main(int argc, char** argv) {
 	while (yylex()) {
 		int result = pop();
 
+		printf("\n");
+
 		if (error == 'C') {
 			printf("Błąd: zły symbol \"%c\"\n", bad_char);
 		} else if (error == 'S') {
@@ -1874,8 +1876,7 @@ int main(int argc, char** argv) {
 			printf("= %d\n", result);
 		}
 
-		//printf("\n");
-
+		printf("\n");
 		new_equation();
 	}
 
