@@ -1,12 +1,18 @@
-/* comment */
+/* Komentarz 1. */
+
 /*
    *
-*
-this is comment */
+* /
+Komentarz 2. */
+
+/**
+ * Komentarz 3.
+ *
+ */
 
 /*
-weqf
+Komentarz 4.
 */
-/* "abcd" */
+/* "Komentarz 5." */
 
-"/* x \" */"
+"/* To nie jest komentarz \" */"

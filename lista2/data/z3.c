@@ -1,5 +1,4 @@
 #include<iostream>
-/* Komentarz 1 */
 
 /** Maly przyklad programu
  *
