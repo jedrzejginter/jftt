@@ -1,4 +1,9 @@
-#1 -
+
+
+
+
+
+			#1 -
 #2 spacja na początku
 #3 tab na początku
 #4 tab i spacja na początku

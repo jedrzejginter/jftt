@@ -372,8 +372,8 @@ struct yy_trans_info
 	};
 static yyconst flex_int16_t yy_accept[18] =
     {   0,
-        0,    0,    7,    5,    3,    4,    6,    1,    1,    1,
-        5,    3,    2,    1,    1,    1,    0
+        0,    0,    7,    5,    3,    4,    1,    1,    1,    5,
+        3,    2,    1,    1,    1,    1,    0
     } ;
 
 static yyconst flex_int32_t yy_ec[256] =
@@ -410,33 +410,33 @@ static yyconst flex_int32_t yy_ec[256] =
 
 static yyconst flex_int32_t yy_meta[5] =
     {   0,
-        1,    2,    2,    2
+        1,    2,    2,    3
     } ;
 
 static yyconst flex_int16_t yy_base[20] =
     {   0,
-        0,    4,   16,    0,    7,   17,   17,    9,    0,    0,
-        0,    0,   17,    0,    0,    0,   17,   14,   12
+        0,    4,   15,    0,    7,   23,    9,    0,   13,    0,
+        0,   23,    0,    0,    0,    0,   23,   17,   19
     } ;
 
 static yyconst flex_int16_t yy_def[20] =
     {   0,
-       17,   17,   17,   18,   17,   17,   17,   17,   19,   19,
-       18,    5,   17,    8,   19,   19,    0,   17,   17
+       17,   17,   17,   18,   17,   17,   17,   19,   19,   18,
+        5,   17,    7,   19,   19,    9,    0,   17,   17
     } ;
 
-static yyconst flex_int16_t yy_nxt[22] =
+static yyconst flex_int16_t yy_nxt[28] =
     {   0,
-        4,    5,    6,    7,    4,    8,    9,   10,   12,   13,
-       14,   15,   16,   16,   11,   17,    3,   17,   17,   17,
-       17
+        4,    5,    6,    4,    4,    7,    8,    9,   11,   12,
+       13,   14,   15,   10,   17,   17,   16,   10,   17,   10,
+       15,   15,    3,   17,   17,   17,   17
     } ;
 
-static yyconst flex_int16_t yy_chk[22] =
+static yyconst flex_int16_t yy_chk[28] =
     {   0,
         1,    1,    1,    1,    2,    2,    2,    2,    5,    5,
-        8,    8,    8,   19,   18,    3,   17,   17,   17,   17,
-       17
+        7,    7,    7,    9,    3,    0,    9,   18,    0,   18,
+       19,   19,   17,   17,   17,   17,   17
     } ;
 
 static yy_state_type yy_last_accepting_state;
@@ -456,10 +456,9 @@ char *yytext;
 #line 1 "z1.lex"
 #line 2 "z1.lex"
 #include<stdio.h>
-int blanks = 0;
 int lines = 0;
 int words = 0;
-#line 463 "z1.c"
+#line 462 "z1.c"
 
 #define INITIAL 0
 
@@ -644,9 +643,9 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 9 "z1.lex"
+#line 8 "z1.lex"
 
-#line 650 "z1.c"
+#line 649 "z1.c"
 
 	if ( !(yy_init) )
 		{
@@ -706,7 +705,7 @@ yy_match:
 			yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
 			++yy_cp;
 			}
-		while ( yy_base[yy_current_state] != 17 );
+		while ( yy_base[yy_current_state] != 23 );
 
 yy_find_action:
 		yy_act = yy_accept[yy_current_state];
@@ -733,7 +732,7 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 /* rule 1 can match eol */
 YY_RULE_SETUP
-#line 10 "z1.lex"
+#line 9 "z1.lex"
 {}
 	YY_BREAK
 case 2:
@@ -741,31 +740,31 @@ case 2:
 (yy_c_buf_p) = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 11 "z1.lex"
+#line 10 "z1.lex"
 {}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 12 "z1.lex"
+#line 11 "z1.lex"
 { printf(" "); }
 	YY_BREAK
 case 4:
 /* rule 4 can match eol */
 YY_RULE_SETUP
-#line 13 "z1.lex"
+#line 12 "z1.lex"
 { lines++; printf("\n"); }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 14 "z1.lex"
-{ printf("%s", yytext); words++; }
+#line 13 "z1.lex"
+{ words++; printf("%s", yytext); }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 15 "z1.lex"
+#line 14 "z1.lex"
 ECHO;
 	YY_BREAK
-#line 769 "z1.c"
+#line 768 "z1.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1765,15 +1764,15 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 15 "z1.lex"
+#line 14 "z1.lex"
 
 
 
 
 int main(int argc, char** argv) {
-  yylex();
+	yylex();
 
-  printf(">\n> Liczba linii: %d\n", lines);
-  printf("> Liczba słów: %d\n>\n", words);
+	printf(">\n> Liczba linii: %d\n", lines);
+	printf("> Liczba słów: %d\n>\n", words);
 }
 

@@ -1,6 +1,5 @@
 %{
 #include<stdio.h>
-int blanks = 0;
 int lines = 0;
 int words = 0;
 %}
@@ -11,13 +10,13 @@ int words = 0;
 [ \t]+$				{}
 [ \t]+				{ printf(" "); }
 \n						{ lines++; printf("\n"); }
-[^ \t\n\r\f\v]+	{ printf("%s", yytext); words++; }
+[^ \t\n]+			{ words++; printf("%s", yytext); }
 %%
 
 
 int main(int argc, char** argv) {
-  yylex();
+	yylex();
 
-  printf(">\n> Liczba linii: %d\n", lines);
-  printf("> Liczba słów: %d\n>\n", words);
+	printf(">\n> Liczba linii: %d\n", lines);
+	printf("> Liczba słów: %d\n>\n", words);
 }

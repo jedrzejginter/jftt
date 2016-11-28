@@ -1,6 +1,5 @@
-#line 2 "z4.c"
 
-#line 4 "z4.c"
+#line 3 "lex.yy.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -370,10 +369,10 @@ struct yy_trans_info
 	flex_int32_t yy_verify;
 	flex_int32_t yy_nxt;
 	};
-static yyconst flex_int16_t yy_accept[13] =
+static yyconst flex_int16_t yy_accept[14] =
     {   0,
-        0,    0,    7,    5,    3,    4,    1,    1,    2,    3,
-        2,    0
+        0,    0,    7,    5,    1,    1,    3,    4,    0,    3,
+        4,    2,    0
     } ;
 
 static yyconst flex_int32_t yy_ec[256] =
@@ -381,17 +380,17 @@ static yyconst flex_int32_t yy_ec[256] =
         1,    1,    1,    1,    1,    1,    1,    1,    2,    3,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    2,    1,    1,    1,    1,    4,    1,    1,    1,
-        1,    4,    4,    1,    5,    1,    4,    6,    6,    6,
-        6,    6,    6,    6,    6,    6,    6,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    4,    1,    1,    1,    1,    1,    1,
+        1,    2,    1,    1,    1,    1,    1,    1,    1,    1,
+        1,    1,    1,    1,    1,    4,    1,    5,    5,    5,
+        5,    5,    5,    5,    5,    5,    5,    1,    1,    1,
+        1,    1,    1,    1,    6,    6,    6,    6,    6,    6,
+        6,    6,    6,    6,    6,    6,    6,    6,    6,    6,
+        6,    6,    6,    6,    6,    6,    6,    6,    6,    6,
+        1,    1,    1,    1,    1,    1,    6,    6,    6,    6,
 
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
+        6,    6,    6,    6,    6,    6,    6,    6,    6,    6,
+        6,    6,    6,    6,    6,    6,    6,    6,    6,    6,
+        6,    6,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
@@ -410,31 +409,31 @@ static yyconst flex_int32_t yy_ec[256] =
 
 static yyconst flex_int32_t yy_meta[7] =
     {   0,
-        1,    2,    1,    1,    1,    3
+        1,    1,    1,    1,    2,    3
     } ;
 
-static yyconst flex_int16_t yy_base[15] =
+static yyconst flex_int16_t yy_base[16] =
     {   0,
-        0,    0,    9,   10,    0,   10,   10,    0,    0,    0,
-        0,   10,    6,    4
+        0,    0,   13,   14,   14,   14,    3,    0,    0,    0,
+        0,    0,   14,    8,   10
     } ;
 
-static yyconst flex_int16_t yy_def[15] =
+static yyconst flex_int16_t yy_def[16] =
     {   0,
-       12,    1,   12,   12,   13,   12,   12,   14,   14,   13,
-       14,    0,   12,   12
+       13,    1,   13,   13,   13,   13,   13,   14,   15,    7,
+       14,   15,    0,   13,   13
     } ;
 
-static yyconst flex_int16_t yy_nxt[17] =
+static yyconst flex_int16_t yy_nxt[21] =
     {   0,
-        4,    5,    6,    7,    8,    9,   11,   10,   12,    3,
-       12,   12,   12,   12,   12,   12
+        4,    5,    6,    4,    7,    8,    9,   10,   11,   11,
+       11,   12,   13,    3,   13,   13,   13,   13,   13,   13
     } ;
 
-static yyconst flex_int16_t yy_chk[17] =
+static yyconst flex_int16_t yy_chk[21] =
     {   0,
-        1,    1,    1,    1,    1,    1,   14,   13,    3,   12,
-       12,   12,   12,   12,   12,   12
+        1,    1,    1,    1,    1,    1,    7,    7,    7,   14,
+       14,   15,    3,   13,   13,   13,   13,   13,   13,   13
     } ;
 
 static yy_state_type yy_last_accepting_state;
@@ -451,100 +450,11 @@ int yy_flex_debug = 0;
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
-#line 1 "z4.lex"
-#line 2 "z4.lex"
-#include <stdio.h>
-#include <math.h>
+#line 1 "calc.l"
+#line 2 "calc.l"
+#include "calc.tab.h"
 
-int arguments = 0;
-int operators = 0;
-
-struct StackItem {
-	int value;
-};
-
-struct Stack {
-	struct StackItem *items[1024];
-	int size;
-};
-
-struct Stack stack;
-char error = '*';
-char bad_char;
-
-void new_equation() {
-	for (int i = 0; i < stack.size; i++) {
-		free(stack.items[i]);
-	}
-
-	stack.size = 0;
-	error = '*';
-}
-
-void push(int num) {
-	struct StackItem *item = malloc(sizeof(struct StackItem));
-	item->value = num;
-
-	stack.items[stack.size] = item;
-	stack.size++;
-}
-
-void push_raw(char* val) {
-	char *v = strdup(val);
-	push(atoi(v));
-}
-
-int pop() {
-	if (stack.size == 0) {
-		error = 'S';
-		return 0;
-
-	} else {
-		struct StackItem *item = stack.items[stack.size - 1];
-		stack.size--;
-
-		free(item);
-
-		return item->value;
-	}
-}
-
-void calc(char *val) {
-	if (stack.size < 2) {
-		error = 'A';
-
-	} else {
-		int a2 = pop();
-		int a1 = pop();
-		char* op = strdup(val);
-
-		if (strcmp(op, "+") == 0) {
-			push(a1 + a2);
-		} else if (strcmp(op, "-") == 0) {
-			push(a1 - a2);
-		} else if (strcmp(op, "*") == 0) {
-			push(a1 * a2);
-		} else if (strcmp(op, "/") == 0) {
-			if (a2 == 0) {
-				push(0);
-				error = 'M';
-			} else {
-				push(a1 / a2);
-			}
-		} else if (strcmp(op, "%") == 0) {
-			if (a2 == 0) {
-				push(0);
-				error = 'M';
-			} else {
-				push(a1 % a2);
-			}
-		} else if (strcmp(op, "^") == 0) {
-			push(pow(a1, a2));
-		}
-	}
-}
-
-#line 548 "z4.c"
+#line 458 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -726,9 +636,9 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 95 "z4.lex"
+#line 5 "calc.l"
 
-#line 732 "z4.c"
+#line 642 "lex.yy.c"
 
 	if ( !(yy_init) )
 		{
@@ -781,13 +691,13 @@ yy_match:
 			while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 				{
 				yy_current_state = (int) yy_def[yy_current_state];
-				if ( yy_current_state >= 13 )
+				if ( yy_current_state >= 14 )
 					yy_c = yy_meta[(unsigned int) yy_c];
 				}
 			yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
 			++yy_cp;
 			}
-		while ( yy_base[yy_current_state] != 10 );
+		while ( yy_base[yy_current_state] != 14 );
 
 yy_find_action:
 		yy_act = yy_accept[yy_current_state];
@@ -812,37 +722,40 @@ do_action:	/* This label is used only to access EOF actions. */
 			goto yy_find_action;
 
 case 1:
+/* rule 1 can match eol */
 YY_RULE_SETUP
-#line 96 "z4.lex"
-{ printf("%s", yytext); calc(yytext); operators++; }
+#line 6 "calc.l"
+;
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 97 "z4.lex"
-{ printf("%s", yytext); push_raw(yytext); arguments++; }
+#line 7 "calc.l"
+{ yylval.fval = atof(yytext); return FLOAT; }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 98 "z4.lex"
-{ printf(" "); }
+#line 8 "calc.l"
+{ yylval.ival = atoi(yytext); return INT; }
 	YY_BREAK
 case 4:
-/* rule 4 can match eol */
 YY_RULE_SETUP
-#line 99 "z4.lex"
-{ return 1; }
+#line 9 "calc.l"
+{
+	yylval.sval = strdup(yytext);
+	return STRING;
+}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 100 "z4.lex"
-{ printf("%s", yytext); error = 'C'; bad_char = *yytext; }
+#line 13 "calc.l"
+;
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 101 "z4.lex"
+#line 14 "calc.l"
 ECHO;
 	YY_BREAK
-#line 846 "z4.c"
+#line 759 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1134,7 +1047,7 @@ static int yy_get_next_buffer (void)
 		while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 			{
 			yy_current_state = (int) yy_def[yy_current_state];
-			if ( yy_current_state >= 13 )
+			if ( yy_current_state >= 14 )
 				yy_c = yy_meta[(unsigned int) yy_c];
 			}
 		yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
@@ -1162,11 +1075,11 @@ static int yy_get_next_buffer (void)
 	while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 		{
 		yy_current_state = (int) yy_def[yy_current_state];
-		if ( yy_current_state >= 13 )
+		if ( yy_current_state >= 14 )
 			yy_c = yy_meta[(unsigned int) yy_c];
 		}
 	yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
-	yy_is_jam = (yy_current_state == 12);
+	yy_is_jam = (yy_current_state == 13);
 
 	return yy_is_jam ? 0 : yy_current_state;
 }
@@ -1839,36 +1752,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 101 "z4.lex"
+#line 14 "calc.l"
 
 
-
-int main(int argc, char** argv) {
-	new_equation();
-
-	while (yylex()) {
-		int result = pop();
-
-		printf("\n");
-
-		if (error == 'C') {
-			printf("Błąd: zły symbol \"%c\"\n", bad_char);
-		} else if (error == 'S') {
-			printf("Błąd: stos jest pusty\n");
-		} else if (error == 'M') {
-			printf("Błąd: dzielenie przez 0\n");
-		} else if (error == 'A') {
-			printf("Błąd: za mała liczba argumentów\n");
-		} else if (stack.size > 0) {
-			printf("Błąd: za mała liczba operatorów\n");
-		} else {
-			printf("= %d\n", result);
-		}
-
-		printf("\n");
-		new_equation();
-	}
-
-	return 0;
-}
 
