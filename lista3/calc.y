@@ -1,40 +1,60 @@
 %{
+#include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
+#include <string.h>
+#include "stack.h"
 
-extern "C" int yylex();
-extern "C" int yyparse();
-
-void yyerror(const char *m);
+int yylex(void);
+void yyerror(char *);
+void add_to_queue(char *);
 %}
 
 %union {
-	int ival;
-	float fval;
-	char *sval;
+	int num;
+	char *str;
 }
 
-%token <ival> INT
-%token <fval> FLOAT
-%token <sval> STRING
+%token NUM
+%token NL OP
+%type <num> NL
+%type <str> NUM OP exp
 
 %%
+line:
+	NL		{}
+	| exp NL { printf("exp: %s\n", $1); }
+	| line exp NL { printf("exp: %s\n", $2); }
+;
 
-snazzle:
-	INT snazzle      { printf("bison found an int: %d\n", $1); }
-	| FLOAT snazzle  { printf("bison found a float: %f\n", $1); }
-	| STRING snazzle { printf("bison found a string: %s\n", $1); }
-	| INT            { printf("bison found an int: %d\n", $1); }
-	| FLOAT          { printf("bison found a float: %f\n", $1); }
-	| STRING         { printf("bison found a string: %s\n", $1); }
-	;
-
+exp:
+	NUM					{ add_to_queue($1); }
+	| exp '+' exp		{ add_to_queue("+"); }
+	| exp '-' exp		{ add_to_queue("-"); }
+	| exp '*' exp		{ add_to_queue("*"); }
+	| exp '/' exp		{ add_to_queue("/"); }
+	| exp '%' exp		{ add_to_queue("%"); }
+	| exp '^' exp		{ add_to_queue("^"); }
+	| '(' exp ')'		{ add_to_queue("("); add_to_queue(")"); }
+;
 %%
 
-int main(void) {
-	yylex();
+void add_to_queue(char *e) {
+	printf("Added to queue: %s\n", e);
 }
 
-void yyerror(const char *m) {
-	printf("Error: %s\n", m);
-	exit(-1);
+int main (int argc, char **argv) {
+	int e;
+
+	push(1);
+	pop(&e);
+
+	printf("%d", e);
+
+	//yyparse();
+	return 0;
+}
+
+void yyerror (char *s) {
+	fprintf(stderr, "%s\n", s);
 }

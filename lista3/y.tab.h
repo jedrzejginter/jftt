@@ -39,29 +39,28 @@
    /* Put the tokens into the symbol table, so that GDB and other debuggers
       know about them.  */
    enum yytokentype {
-     INT = 258,
-     FLOAT = 259,
-     STRING = 260
+     NUM = 258,
+     NL = 259,
+     OP = 260
    };
 #endif
 /* Tokens.  */
-#define INT 258
-#define FLOAT 259
-#define STRING 260
+#define NUM 258
+#define NL 259
+#define OP 260
 
 
 
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 10 "calc.y"
+#line 13 "calc.y"
 {
-	int ival;
-	float fval;
-	char *sval;
+	int num;
+	char *str;
 }
 /* Line 1529 of yacc.c.  */
-#line 65 "calc.tab.h"
+#line 64 "y.tab.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
