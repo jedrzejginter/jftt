@@ -66,15 +66,29 @@
    /* Put the tokens into the symbol table, so that GDB and other debuggers
       know about them.  */
    enum yytokentype {
-     NUM = 258,
-     NL = 259,
-     OP = 260
+     T_NL = 258,
+     T_LP = 259,
+     T_RP = 260,
+     T_PLUS = 261,
+     T_MIN = 262,
+     T_MUL = 263,
+     T_DIV = 264,
+     T_MOD = 265,
+     T_POW = 266,
+     T_NUM = 267
    };
 #endif
 /* Tokens.  */
-#define NUM 258
-#define NL 259
-#define OP 260
+#define T_NL 258
+#define T_LP 259
+#define T_RP 260
+#define T_PLUS 261
+#define T_MIN 262
+#define T_MUL 263
+#define T_DIV 264
+#define T_MOD 265
+#define T_POW 266
+#define T_NUM 267
 
 
 
@@ -84,13 +98,36 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <string.h>
+#include <errno.h>
+#include <math.h>
 #include "stack.h"
+
+#define isdigit(c) ((c >= '0' && c <= '9')? 1 : 0)
 
 int yylex(void);
 void yyerror(char *);
-void add_to_queue(char *);
+int calculate_postfix(char *postfix);
+void clean_up(void);
+void psput(char *, int, int);
+struct Token {
+	char* value;
+	int tid;
+	int prec;
+};
+
+struct Token psstack[1024];
+int psstack_pos = 0;
+
+struct Token opstack[1024];
+int opstack_pos = 0;
+
+struct Token rpnstack[1024];
+int rpnstack_pos = 0;
+
+void rpnstack_push(struct Token);
+struct Token rpnstack_pop();
+
 
 
 /* Enabling traces.  */
@@ -113,13 +150,12 @@ void add_to_queue(char *);
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 13 "calc.y"
+#line 36 "calc.y"
 {
-	int num;
-	char *str;
+	char *string;
 }
 /* Line 193 of yacc.c.  */
-#line 123 "y.tab.c"
+#line 159 "y.tab.c"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
@@ -132,7 +168,7 @@ typedef union YYSTYPE
 
 
 /* Line 216 of yacc.c.  */
-#line 136 "y.tab.c"
+#line 172 "y.tab.c"
 
 #ifdef short
 # undef short
@@ -345,22 +381,22 @@ union yyalloc
 #endif
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  7
+#define YYFINAL  2
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   44
+#define YYLAST   23
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  14
+#define YYNTOKENS  13
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  3
+#define YYNNTS  7
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  12
+#define YYNRULES  16
 /* YYNRULES -- Number of states.  */
-#define YYNSTATES  24
+#define YYNSTATES  26
 
 /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   260
+#define YYMAXUTOK   267
 
 #define YYTRANSLATE(YYX)						\
   ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
@@ -371,13 +407,13 @@ static const yytype_uint8 yytranslate[] =
        0,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,    10,     2,     2,
-      12,    13,     8,     6,     2,     7,     2,     9,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,     2,    11,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -394,7 +430,7 @@ static const yytype_uint8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
-       5
+       5,     6,     7,     8,     9,    10,    11,    12
 };
 
 #if YYDEBUG
@@ -402,25 +438,25 @@ static const yytype_uint8 yytranslate[] =
    YYRHS.  */
 static const yytype_uint8 yyprhs[] =
 {
-       0,     0,     3,     5,     8,    12,    14,    18,    22,    26,
-      30,    34,    38
+       0,     0,     3,     4,     7,     9,    12,    14,    18,    22,
+      24,    28,    32,    36,    38,    42,    44
 };
 
 /* YYRHS -- A `-1'-separated list of the rules' RHS.  */
 static const yytype_int8 yyrhs[] =
 {
-      15,     0,    -1,     4,    -1,    16,     4,    -1,    15,    16,
-       4,    -1,     3,    -1,    16,     6,    16,    -1,    16,     7,
-      16,    -1,    16,     8,    16,    -1,    16,     9,    16,    -1,
-      16,    10,    16,    -1,    16,    11,    16,    -1,    12,    16,
-      13,    -1
+      14,     0,    -1,    -1,    14,    15,    -1,     3,    -1,    16,
+       3,    -1,    17,    -1,    16,     6,    17,    -1,    16,     7,
+      17,    -1,    18,    -1,    17,     8,    18,    -1,    17,     9,
+      18,    -1,    17,    10,    18,    -1,    19,    -1,    18,    11,
+      19,    -1,    12,    -1,     4,    16,     5,    -1
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    25,    25,    26,    27,    31,    32,    33,    34,    35,
-      36,    37,    38
+       0,    48,    48,    49,    53,    54,    70,    71,    72,    76,
+      77,    78,    79,    83,    84,    88,    89
 };
 #endif
 
@@ -429,8 +465,9 @@ static const yytype_uint8 yyrline[] =
    First, the terminals, then, starting at YYNTOKENS, nonterminals.  */
 static const char *const yytname[] =
 {
-  "$end", "error", "$undefined", "NUM", "NL", "OP", "'+'", "'-'", "'*'",
-  "'/'", "'%'", "'^'", "'('", "')'", "$accept", "line", "exp", 0
+  "$end", "error", "$undefined", "T_NL", "T_LP", "T_RP", "T_PLUS",
+  "T_MIN", "T_MUL", "T_DIV", "T_MOD", "T_POW", "T_NUM", "$accept",
+  "program", "line", "expr", "term", "efact", "fact", 0
 };
 #endif
 
@@ -439,23 +476,23 @@ static const char *const yytname[] =
    token YYLEX-NUM.  */
 static const yytype_uint16 yytoknum[] =
 {
-       0,   256,   257,   258,   259,   260,    43,    45,    42,    47,
-      37,    94,    40,    41
+       0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
+     265,   266,   267
 };
 # endif
 
 /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,    14,    15,    15,    15,    16,    16,    16,    16,    16,
-      16,    16,    16
+       0,    13,    14,    14,    15,    15,    16,    16,    16,    17,
+      17,    17,    17,    18,    18,    19,    19
 };
 
 /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
 static const yytype_uint8 yyr2[] =
 {
-       0,     2,     1,     2,     3,     1,     3,     3,     3,     3,
-       3,     3,     3
+       0,     2,     0,     2,     1,     2,     1,     3,     3,     1,
+       3,     3,     3,     1,     3,     1,     3
 };
 
 /* YYDEFACT[STATE-NAME] -- Default rule to reduce with in state
@@ -463,31 +500,31 @@ static const yytype_uint8 yyr2[] =
    means the default is an error.  */
 static const yytype_uint8 yydefact[] =
 {
-       0,     5,     2,     0,     0,     0,     0,     1,     0,     3,
-       0,     0,     0,     0,     0,     0,    12,     4,     6,     7,
-       8,     9,    10,    11
+       2,     0,     1,     4,     0,    15,     3,     0,     6,     9,
+      13,     0,     5,     0,     0,     0,     0,     0,     0,    16,
+       7,     8,    10,    11,    12,    14
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-      -1,     4,     5
+      -1,     1,     6,     7,     8,     9,    10
 };
 
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
    STATE-NUM.  */
-#define YYPACT_NINF -4
+#define YYPACT_NINF -8
 static const yytype_int8 yypact[] =
 {
-      12,    -4,    -4,     1,     2,    19,    25,    -4,    33,    -4,
-       1,     1,     1,     1,     1,     1,    -4,    -4,    11,    11,
-      11,    11,    11,    11
+      -8,     0,    -8,    -8,    -3,    -8,    -8,    -1,     5,    12,
+      -8,    11,    -8,    -3,    -3,    -3,    -3,    -3,    -3,    -8,
+       5,     5,    12,    12,    12,    -8
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-      -4,    -4,    -3
+      -8,    -8,    -8,     6,    -6,     4,    -7
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
@@ -497,29 +534,25 @@ static const yytype_int8 yypgoto[] =
 #define YYTABLE_NINF -1
 static const yytype_uint8 yytable[] =
 {
-       6,     8,     7,     0,     1,     1,     0,    18,    19,    20,
-      21,    22,    23,     3,     3,     1,     2,    10,    11,    12,
-      13,    14,    15,     9,     3,    10,    11,    12,    13,    14,
-      15,    10,    11,    12,    13,    14,    15,    17,    16,    10,
-      11,    12,    13,    14,    15
+       2,     4,    12,     3,     4,    13,    14,    20,    21,     5,
+      11,    25,     5,    15,    16,    17,    19,    13,    14,    22,
+      23,    24,     0,    18
 };
 
 static const yytype_int8 yycheck[] =
 {
-       3,     4,     0,    -1,     3,     3,    -1,    10,    11,    12,
-      13,    14,    15,    12,    12,     3,     4,     6,     7,     8,
-       9,    10,    11,     4,    12,     6,     7,     8,     9,    10,
-      11,     6,     7,     8,     9,    10,    11,     4,    13,     6,
-       7,     8,     9,    10,    11
+       0,     4,     3,     3,     4,     6,     7,    13,    14,    12,
+       4,    18,    12,     8,     9,    10,     5,     6,     7,    15,
+      16,    17,    -1,    11
 };
 
 /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
    symbol of state STATE-NUM.  */
 static const yytype_uint8 yystos[] =
 {
-       0,     3,     4,    12,    15,    16,    16,     0,    16,     4,
-       6,     7,     8,     9,    10,    11,    13,     4,    16,    16,
-      16,    16,    16,    16
+       0,    14,     0,     3,     4,    12,    15,    16,    17,    18,
+      19,    16,     3,     6,     7,     8,     9,    10,    11,     5,
+      17,    17,    18,    18,    18,    19
 };
 
 #define yyerrok		(yyerrstatus = 0)
@@ -1333,64 +1366,26 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-        case 2:
-#line 25 "calc.y"
-    {}
-    break;
+        case 5:
+#line 54 "calc.y"
+    {
+		int result = calculate_postfix((yyvsp[(1) - (2)].string));
 
-  case 3:
-#line 26 "calc.y"
-    { printf("exp: %s\n", (yyvsp[(1) - (2)].str)); }
-    break;
+		if (result == -1 && errno == EDOM) {
+			printf("Dzielenie przez 0!");
+		} else {
+			printf("\nWynik: %d\n", result);
+		}
 
-  case 4:
-#line 27 "calc.y"
-    { printf("exp: %s\n", (yyvsp[(2) - (3)].str)); }
-    break;
-
-  case 5:
-#line 31 "calc.y"
-    { add_to_queue((yyvsp[(1) - (1)].str)); }
-    break;
-
-  case 6:
-#line 32 "calc.y"
-    { add_to_queue("+"); }
-    break;
-
-  case 7:
-#line 33 "calc.y"
-    { add_to_queue("-"); }
-    break;
-
-  case 8:
-#line 34 "calc.y"
-    { add_to_queue("*"); }
-    break;
-
-  case 9:
-#line 35 "calc.y"
-    { add_to_queue("/"); }
-    break;
-
-  case 10:
-#line 36 "calc.y"
-    { add_to_queue("%"); }
-    break;
-
-  case 11:
-#line 37 "calc.y"
-    { add_to_queue("^"); }
-    break;
-
-  case 12:
-#line 38 "calc.y"
-    { add_to_queue("("); add_to_queue(")"); }
+		psstack_pos = 0;
+		opstack_pos = 0;
+		rpnstack_pos = 0;
+	}
     break;
 
 
 /* Line 1267 of yacc.c.  */
-#line 1394 "y.tab.c"
+#line 1389 "y.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1604,26 +1599,178 @@ yyreturn:
 }
 
 
-#line 40 "calc.y"
+#line 91 "calc.y"
 
-
-void add_to_queue(char *e) {
-	printf("Added to queue: %s\n", e);
-}
 
 int main (int argc, char **argv) {
-	int e;
-
-	push(1);
-	pop(&e);
-
-	printf("%d", e);
-
-	//yyparse();
+	atexit(clean_up);
+	yyparse();
 	return 0;
 }
 
 void yyerror (char *s) {
-	fprintf(stderr, "%s\n", s);
+	printf("Błąd.\n");
+}
+
+void clean_up() {
+
+}
+
+void psput(char *s, int tid, int prec) {
+	struct Token tok;
+	tok.value = s;
+	tok.tid = tid;
+	tok.prec = prec;
+	psstack[psstack_pos++] = tok;
+}
+
+void rpnstack_push(struct Token t) {
+	rpnstack[rpnstack_pos++] = t;
+}
+
+struct Token rpnstack_pop() {
+	struct Token rettok = rpnstack[rpnstack_pos - 1];
+	rpnstack_pos--;
+
+	return rettok;
+}
+
+int calculate_postfix(char *postfix) {
+	struct Token tok;
+
+	for (int i = 0; i < psstack_pos; i++) {
+		tok = psstack[i];
+
+		switch (tok.tid) {
+			case 0: {
+				rpnstack_push(tok);
+				break;
+			}
+			case T_LP: {
+				opstack[opstack_pos] = tok;
+				opstack_pos++;
+				break;
+			}
+			case T_RP: {
+				int lp_found = 0;
+
+				for (int i = opstack_pos - 1; i >= 0; --i) {
+					if (opstack[i].tid != T_LP) {
+						rpnstack_push(opstack[i]);
+						opstack_pos--;
+						lp_found = 1;
+					} else {
+						break;
+					}
+				}
+
+				if (lp_found == 0) {
+					printf("Error!! Brak lp\n");
+					return -1;
+				} else if (opstack_pos > 0) {
+					opstack_pos--;
+				}
+
+				break;
+			}
+			default: {
+				for (int i = opstack_pos - 1; i >= 0; i--) {
+					int should_pop = 0;
+
+					if (opstack[i].tid == T_POW) {
+						if (opstack[i].prec > tok.prec) {
+							should_pop = 1;
+						}
+					} else {
+						if (opstack[i].prec >= tok.prec) {
+							should_pop = 1;
+						}
+					}
+
+					if (should_pop == 1) {
+						rpnstack_push(opstack[i]);
+						opstack_pos--;
+					} else {
+						break;
+					}
+				}
+
+				opstack[opstack_pos] = tok;
+				opstack_pos++;
+
+				break;
+			}
+		}
+	}
+
+	if (opstack[opstack_pos-1].tid == T_LP || opstack[opstack_pos-1].tid == T_RP) {
+		printf("Error!!!");
+		return -1;
+	}
+
+	for (int i = opstack_pos - 1; i >= 0; i--) {
+		rpnstack_push(opstack[i]);
+	}
+
+	struct Token tmpstack[1024];
+	int tmpstack_pos = 0;
+
+	for (int i = 0; i < rpnstack_pos; i++) {
+		struct Token t = rpnstack[i];
+
+		printf("%s ", t.value);
+
+		if (t.tid == 0) {
+			tmpstack[tmpstack_pos] = t;
+			tmpstack_pos++;
+		} else {
+			if (tmpstack_pos >= 2) {
+				int a1 = atoi(tmpstack[tmpstack_pos-2].value);
+				int a2 = atoi(tmpstack[tmpstack_pos-1].value);
+
+				tmpstack_pos -= 2;
+
+				int pushval = 0;
+
+				switch (t.tid) {
+					case T_PLUS: { pushval = a1+a2; break; }
+					case T_MIN: { pushval = a1-a2; break; }
+					case T_DIV:
+					case T_MOD: {
+						if (a2 == 0) {
+							yyerror("Błąd - dzielenie przez 0!\n");
+						} else {
+							if (t.tid == T_DIV) {
+								pushval = a1/a2;
+							} else {
+								pushval = a1%a2;
+							}
+						}
+
+						break;
+					}
+					case T_MUL: { pushval = a1*a2; break; }
+					case T_POW: { pushval = pow(a1, a2); break; }
+					default: { break; }
+				}
+
+				struct Token nt;
+				char tmp[1024];
+
+				sprintf(tmp, "%d", pushval);
+
+				nt.value = strdup(tmp);
+				nt.tid = 0;
+				nt.prec = 0;
+
+				tmpstack[tmpstack_pos] = nt;
+				tmpstack_pos++;
+			} else {
+				yyerror("Błąd na stosie\n");
+			}
+		}
+	}
+
+	return atoi(tmpstack[0].value);
 }
 
