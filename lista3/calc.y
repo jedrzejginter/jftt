@@ -6,12 +6,9 @@
 #include <math.h>
 #include "stack.h"
 
-#define isdigit(c) ((c >= '0' && c <= '9')? 1 : 0)
-
 int yylex(void);
 void yyerror(char *);
-int calculate_postfix(char *postfix);
-void clean_up(void);
+int calculate(void);
 void psput(char *, int, int);
 struct Token {
 	char* value;
@@ -51,19 +48,8 @@ program:
 
 line:
 	T_NL
-	| expr T_NL {
-		int result = calculate_postfix($1);
-
-		if (result == -1 && errno == EDOM) {
-			printf("Dzielenie przez 0!");
-		} else {
-			printf("\nWynik: %d\n", result);
-		}
-
-		psstack_pos = 0;
-		opstack_pos = 0;
-		rpnstack_pos = 0;
-	}
+	| expr T_NL { printf("\nWynik: %d\n", calculate()); psstack_pos = 0;
+		opstack_pos = 0; rpnstack_pos = 0; }
 ;
 
 expr:
@@ -91,17 +77,12 @@ fact:
 %%
 
 int main (int argc, char **argv) {
-	atexit(clean_up);
 	yyparse();
 	return 0;
 }
 
 void yyerror (char *s) {
 	printf("Błąd.\n");
-}
-
-void clean_up() {
-
 }
 
 void psput(char *s, int tid, int prec) {
@@ -123,11 +104,13 @@ struct Token rpnstack_pop() {
 	return rettok;
 }
 
-int calculate_postfix(char *postfix) {
+int calculate() {
 	struct Token tok;
 
 	for (int i = 0; i < psstack_pos; i++) {
 		tok = psstack[i];
+
+		printf("%s", tok.value);
 
 		switch (tok.tid) {
 			case 0: {
@@ -202,6 +185,8 @@ int calculate_postfix(char *postfix) {
 
 	struct Token tmpstack[1024];
 	int tmpstack_pos = 0;
+
+	printf("\n");
 
 	for (int i = 0; i < rpnstack_pos; i++) {
 		struct Token t = rpnstack[i];

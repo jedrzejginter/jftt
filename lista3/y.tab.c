@@ -103,12 +103,9 @@
 #include <math.h>
 #include "stack.h"
 
-#define isdigit(c) ((c >= '0' && c <= '9')? 1 : 0)
-
 int yylex(void);
 void yyerror(char *);
-int calculate_postfix(char *postfix);
-void clean_up(void);
+int calculate(void);
 void psput(char *, int, int);
 struct Token {
 	char* value;
@@ -150,12 +147,12 @@ struct Token rpnstack_pop();
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 36 "calc.y"
+#line 33 "calc.y"
 {
 	char *string;
 }
 /* Line 193 of yacc.c.  */
-#line 159 "y.tab.c"
+#line 156 "y.tab.c"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
@@ -168,7 +165,7 @@ typedef union YYSTYPE
 
 
 /* Line 216 of yacc.c.  */
-#line 172 "y.tab.c"
+#line 169 "y.tab.c"
 
 #ifdef short
 # undef short
@@ -455,8 +452,8 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    48,    48,    49,    53,    54,    70,    71,    72,    76,
-      77,    78,    79,    83,    84,    88,    89
+       0,    45,    45,    46,    50,    51,    56,    57,    58,    62,
+      63,    64,    65,    69,    70,    74,    75
 };
 #endif
 
@@ -1367,25 +1364,14 @@ yyreduce:
   switch (yyn)
     {
         case 5:
-#line 54 "calc.y"
-    {
-		int result = calculate_postfix((yyvsp[(1) - (2)].string));
-
-		if (result == -1 && errno == EDOM) {
-			printf("Dzielenie przez 0!");
-		} else {
-			printf("\nWynik: %d\n", result);
-		}
-
-		psstack_pos = 0;
-		opstack_pos = 0;
-		rpnstack_pos = 0;
-	}
+#line 51 "calc.y"
+    { printf("\nWynik: %d\n", calculate()); psstack_pos = 0;
+		opstack_pos = 0; rpnstack_pos = 0; }
     break;
 
 
 /* Line 1267 of yacc.c.  */
-#line 1389 "y.tab.c"
+#line 1375 "y.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1599,21 +1585,16 @@ yyreturn:
 }
 
 
-#line 91 "calc.y"
+#line 77 "calc.y"
 
 
 int main (int argc, char **argv) {
-	atexit(clean_up);
 	yyparse();
 	return 0;
 }
 
 void yyerror (char *s) {
 	printf("Błąd.\n");
-}
-
-void clean_up() {
-
 }
 
 void psput(char *s, int tid, int prec) {
@@ -1635,11 +1616,13 @@ struct Token rpnstack_pop() {
 	return rettok;
 }
 
-int calculate_postfix(char *postfix) {
+int calculate() {
 	struct Token tok;
 
 	for (int i = 0; i < psstack_pos; i++) {
 		tok = psstack[i];
+
+		printf("%s", tok.value);
 
 		switch (tok.tid) {
 			case 0: {
@@ -1714,6 +1697,8 @@ int calculate_postfix(char *postfix) {
 
 	struct Token tmpstack[1024];
 	int tmpstack_pos = 0;
+
+	printf("\n");
 
 	for (int i = 0; i < rpnstack_pos; i++) {
 		struct Token t = rpnstack[i];
