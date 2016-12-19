@@ -10,6 +10,7 @@ int yylex(void);
 void yyerror(char *);
 int calculate(void);
 void psput(char *, int, int);
+
 struct Token {
 	char* value;
 	int tid;
@@ -48,8 +49,12 @@ program:
 
 line:
 	T_NL
-	| expr T_NL { printf("\nWynik: %d\n", calculate()); psstack_pos = 0;
-		opstack_pos = 0; rpnstack_pos = 0; }
+	| expr T_NL {
+		printf("\nWynik: %d\n", calculate());
+		psstack_pos = 0;
+		opstack_pos = 0;
+		rpnstack_pos = 0;
+	}
 ;
 
 expr:
@@ -76,7 +81,7 @@ fact:
 ;
 %%
 
-int main (int argc, char **argv) {
+int main(int argc, char **argv) {
 	yyparse();
 	return 0;
 }
@@ -110,8 +115,6 @@ int calculate() {
 	for (int i = 0; i < psstack_pos; i++) {
 		tok = psstack[i];
 
-		printf("%s", tok.value);
-
 		switch (tok.tid) {
 			case 0: {
 				rpnstack_push(tok);
@@ -136,7 +139,7 @@ int calculate() {
 				}
 
 				if (lp_found == 0) {
-					printf("Error!! Brak lp\n");
+					printf("Błąd nawiasów\n");
 					return -1;
 				} else if (opstack_pos > 0) {
 					opstack_pos--;
@@ -175,7 +178,7 @@ int calculate() {
 	}
 
 	if (opstack[opstack_pos-1].tid == T_LP || opstack[opstack_pos-1].tid == T_RP) {
-		printf("Error!!!");
+		printf("Błąd nawiasów");
 		return -1;
 	}
 
@@ -185,8 +188,6 @@ int calculate() {
 
 	struct Token tmpstack[1024];
 	int tmpstack_pos = 0;
-
-	printf("\n");
 
 	for (int i = 0; i < rpnstack_pos; i++) {
 		struct Token t = rpnstack[i];
