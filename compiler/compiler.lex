@@ -4,6 +4,7 @@
 int yywrap(void);
 void yyerror(char *);
 void register_new_line(void);
+
 %}
 
 NAT_NUM_L [1-9][0-9]*
@@ -18,8 +19,6 @@ ID [_a-z]+
 ">="			{ return(T_GE); }
 ">"			{ return(T_GT); }
 "="			{ return(T_EQ); }
-{NAT_NUM_L}	{ yylval.num = atoi(yytext); return(T_NUM); }
-{NAT_NUM}	{ yylval.num = atoi(yytext); return(T_NUM); }
 "VAR"			{ return(T_VAR); }
 "BEGIN"		{ return(T_BEG); }
 "END"			{ return(T_END); }
@@ -39,9 +38,11 @@ ID [_a-z]+
 "WRITE"		{ return(T_WRITE); }
 "SKIP"		{ return(T_SKIP); }
 {ID}			{ yylval.id = (char *)strdup(yytext); return(T_PIDENTIFIER); }
-\{[^\}]*\}
+{NAT_NUM_L}	{ yylval.num = atoi(yytext); return(T_NUM); }
+{NAT_NUM}	{ yylval.num = atoi(yytext); return(T_NUM); }
 [ \t]+
 \n				{ register_new_line(); }
+\{.*\}		{ }
 .				{ return(yytext[0]); }
 %%
 

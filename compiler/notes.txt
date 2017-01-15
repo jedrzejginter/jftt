@@ -1,0 +1,10 @@
+12345678903 ponizej 0,5 minuty
+
+TESTY
+p0 zapis binarny 1345601
+p1 sito zmodyfikowane t[10000]
+p2 rozklad na czynniki pierwsze
+p3 a^b%c (a=123467890, b=124567890987654321, c=9876543210)
+p4 silnia na tablicy r=10,100
+p5 n! + F_{n} na tablicach (3)
+p6 tab[123456]

@@ -22,3 +22,12 @@ compiler: $(OBJ) y.tab.h
 
 clean:
 	rm y.tab.c lex.yy.c y.tab.h $(OBJ) compiler
+
+compile-dirty:
+	make compiler && ./compiler < input.txt
+
+compile-clean:
+	make clean && make compile-dirty
+
+compile-to-file:
+	make compiler && ./compiler < input.txt > first.imp
