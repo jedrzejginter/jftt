@@ -1,0 +1,57 @@
+%&pdflatex
+\documentclass[10pt,a4paper]{article}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage[utf8]{inputenc}
+\usepackage{polski}
+\usepackage[polish]{babel}
+\usepackage{amsmath}
+\usepackage{listings}
+\lstset{
+	basicstyle=\small\ttfamily,
+	columns=flexible,
+	breaklines=true,
+	frame=single
+}
+\usepackage{algpseudocode}
+\usepackage{adjustbox}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{color}
+\usepackage{enumitem}
+
+\begin{document}
+
+\title{%
+	Języki formalne i techniki translacji\\
+	\large Lista 5, zadanie 2}
+\author{Jędrzej Ginter, 204420}
+\date{16 stycznia 2017}
+\maketitle
+
+\section{Treść problemu}
+Pokazać, że jeśli $L$ jest językiem bezkontekstowym, to istnieje automat ze stosem $M$ akceptujący $L$ przy stanie końcowym, taki, że $M$ ma co najwyżej dwa stany i nie wykonuje $\epsilon$-ruchów.
+
+\section{Rozwiązanie}
+Język $L$ jest bezkontekstowy, więc $\exists G$, taka, że $L(G) = L$.\\
+Załóżmy, że gramatyka $G$ jest w postaci Greibach:
+\[ p \in P : A \rightarrow a\Gamma, \]
+\[ A \in N, a \in T, \Gamma = N* \]
+Z pewnego lematu wiemy, że jeśli $L$ jest bezkontektstowy i $\epsilon \notin L$, to istnieje PDA $M$ taki, że $L(M) = L = L(G)$ zdefiniowany w następujący sposób:
+\[ M = (\{q\}, \Gamma, N, \delta, q, S, \emptyset) \]
+\[ \forall p : A \rightarrow a\gamma \] \[\delta(q, a, A) = \{(q, \gamma)\} \]
+\[ \forall p : A \rightarrow a \] \[\delta(q, a, A) = \{(q, \epsilon)\} \]
+Jeżeli $\epsilon \in L$, to dodaje się nowy symbol $S\prime$ do gramatyki i dodatkową produkcję $S \rightarrow \epsilon \vert S$. W automacie należy dodać przejście $\delta(q, \epsilon, S\prime) = \{(q, \epsilon),(q, S)\}$.
+Mamy jednak manipulacje stosem przy pustym wejściu ($\epsilon$-ruchy). Należy pozbyć się $\epsilon$-ruchów wykorzystując fakt, że automat może być dwustanowy. W tym celu wprowadzamy nowe symbole stosu:
+\[ \forall A \in N \]
+\[ A, \overline{A} \in \Gamma \]
+\[ \Gamma = \{A, \overline{A}, A \in N\} \]
+dla produkcji $ A \rightarrow a\gamma$, $\gamma = \gamma_{1},\gamma_{2}, ..., \gamma_{n},$ $\gamma_{i} \in N $ wprowadzamy przejścia:
+\[ \delta(q, a, A) = \{(q, \gamma)\}\]
+\[ \delta(q, a, \overline{A}) = \{(q,  \gamma_{1}...\gamma_{n-1}\overline{\gamma_{n}})\} \]
+dla produkcji $A \rightarrow a$:
+\[ \delta(q, a, A) = \{(q, \epsilon)\} \]
+\[ \delta(q, a, \overline{A}) = \{(qF , \epsilon)\} \]
+oraz ustawiamy $\overline{S}$ jako symbol początkowy stosu.
+
+\end{document}

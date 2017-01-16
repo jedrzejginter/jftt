@@ -1,0 +1,84 @@
+%&pdflatex
+\documentclass[10pt,a4paper]{article}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage[utf8]{inputenc}
+\usepackage{polski}
+\usepackage[polish]{babel}
+\usepackage{amsmath}
+\usepackage{listings}
+\lstset{
+	basicstyle=\small\ttfamily,
+	columns=flexible,
+	breaklines=true,
+	frame=single
+}
+\usepackage{algpseudocode}
+\usepackage{adjustbox}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{color}
+\usepackage{enumitem}
+
+\begin{document}
+
+\title{%
+	Języki formalne i techniki translacji\\
+	\large Lista 6, zadanie 4}
+\author{Jędrzej Ginter, 204420}
+\date{16 stycznia 2017}
+\maketitle
+
+\section{Treść problemu}
+Podać definicję sterowaną składnią dla rozważanej gramatyki:\\
+
+{\renewcommand{\arraystretch}{1.25}%
+	\begin{adjustbox}{center}
+		\begin{tabular}{l}
+			E $\rightarrow$ E or T $\vert$ T\\
+			T $\rightarrow$ T and F $\vert$ F\\
+			F $\rightarrow$ not F $\vert$ (E) $\vert$ true $\vert$ false\\
+		\end{tabular}
+	\end{adjustbox}
+}\quad
+
+\section{Rozwiązanie}
+Należy rozbić wyprowadzenia gramatyki na pojedyncze i zapisać definicję sterowaną składnią dla otrzymanych wyprowadzeń.
+
+\subsection{Rozbicie wyprowadzeń gramatyki}
+{\renewcommand{\arraystretch}{1.25}%
+	\begin{adjustbox}{center}
+		\begin{tabular}{l}
+			E $\rightarrow$ E or T\\
+			E $\rightarrow$ T\\
+			T $\rightarrow$ T and F\\
+			T $\rightarrow$ F\\
+			F $\rightarrow$ not F\\
+			F $\rightarrow$ (E)\\
+			F $\rightarrow$ true\\
+			F $\rightarrow$ false\\
+	\end{tabular}
+	\end{adjustbox}
+}\quad
+
+\subsection{Definicja sterowana składnią}
+{\renewcommand{\arraystretch}{1.25}%
+	\begin{adjustbox}{center}
+		\begin{tabular}{ll}
+			E $\rightarrow$ E$_{*}$ or T & E.wart = (E$_{*}$.wart \textit{OR} T.wart) ? true : false \\
+			E $\rightarrow$ T & E.wart = T.wart \\
+			T $\rightarrow$ T$_{*}$ and F & T.wart = (T$_{*}$.wart \textit{AND} F.wart) ? true : false \\
+			T $\rightarrow$ F & T.wart = F.wart \\
+			F $\rightarrow$ not F$_{*}$ & F.wart = (F$_{*}$.wart) ? false : true \\
+			F $\rightarrow$ (E) & F.wart = E.wart \\
+			F $\rightarrow$ true & F.wart = true \\
+			F $\rightarrow$ false & F.wart = false\\
+		\end{tabular}
+	\end{adjustbox}
+} \quad
+
+\textit{Niejednoznaczność została wyeliminowana poprzez nadanie nieterminalom po prawej stronie indeksów dolnych.}\\
+
+\textit{Oznaczenie (A)? B : C jest równoważne wyrażeniu: if A then B else C.}
+
+\end{document}
