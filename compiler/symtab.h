@@ -11,7 +11,9 @@ struct Foobar {
 	char *name;
 	int value;
 	struct Command *cmd_tree[1024];
+	struct Command *add_cmd_tree[1024];
 	int cmd_tree_size;
+	int add_cmd_tree_size;
 	int swap_blocks;
 };
 
@@ -67,6 +69,19 @@ Sym *get_sym(char *name) {
 	return s;
 }
 
+void uninstall_sym(char *name) {
+	Sym *s = get_sym(name);
+
+	if (s == NULL) {
+		register_error();
+		printf("Nieznana zmianna: `%s`\n", name);
+		return;
+	}
+
+	symlist = s->prev;
+	free(s);
+}
+
 void install_sym(char *name, int size, char *type_name) {
 	if (get_sym(name) != NULL) {
 		register_error();
@@ -92,6 +107,7 @@ struct Foobar *load_sym_to_register(char *name, int reg) {
 		return NULL;
 	} else {
 		struct Foobar *f = load_num_to_register(s->memory_index, reg);
+		f->name = name;
 		f->type = "id";
 		return f;
 	}
@@ -123,6 +139,8 @@ struct Foobar *load_tab_sym_to_register(char *name, int index, int reg) {
 			} else {
 				struct Foobar *f = load_num_to_register(s->memory_index + index, reg);
 				f->type = "id";
+				f->name = name;
+
 				return f;
 			}
 		}
@@ -137,8 +155,31 @@ struct Foobar *merge(struct Foobar *a, struct Foobar *b) {
 	return a;
 }
 
+struct Foobar *merge_add_tree(struct Foobar *a, struct Foobar *b) {
+	for (int i = 0; i < b->add_cmd_tree_size; i++) {
+		a = insert(a, b->add_cmd_tree[i]);
+	}
+
+	return a;
+}
+
 struct Foobar *insert(struct Foobar *f, struct Command *c) {
 	f->cmd_tree[f->cmd_tree_size++] = c;
+	return f;
+}
+
+struct Foobar *insert_add(struct Foobar *f, struct Command *c) {
+	f->add_cmd_tree[f->add_cmd_tree_size++] = c;
+	return f;
+}
+
+struct Foobar *reg_overwrite(struct Foobar *f, int regToOverwrite, int regToSet) {
+	for (int i = 0; i < f->cmd_tree_size; i++) {
+		if (f->cmd_tree[i]->reg == regToOverwrite) {
+			f->cmd_tree[i]->reg = regToSet;
+		}
+	}
+
 	return f;
 }
 
@@ -160,6 +201,7 @@ struct Foobar *load_tab_id_index_to_register(char *tab_name, char* ix_name, int 
 
 		f = merge(f, g);
 		f->type = "id";
+		f->name = tab_name;
 
 		f = insert(f, cmd("ADD", 1));
 		f = insert(f, cmd("COPY", 1));
@@ -204,6 +246,18 @@ struct Command *jscmd(char *command, int line) {
 	return c;
 }
 
+struct Foobar *new_foobar() {
+	struct Foobar *f = malloc(sizeof(struct Foobar));
+
+	f->cmd_tree_size = 0;
+	f->add_cmd_tree_size = 0;
+	f->type = NULL;
+	f->value = 0;
+	f->swap_blocks = 0;
+
+	return f;
+}
+
 struct Foobar *load_num_to_register(int num, int reg) {
 	struct Foobar *f = malloc(sizeof(struct Foobar));
 	int mod;
@@ -212,6 +266,7 @@ struct Foobar *load_num_to_register(int num, int reg) {
 	int org_num = num;
 
 	f->cmd_tree_size = 0;
+	f->add_cmd_tree_size = 0;
 	f->type = "num";
 	f->value = num;
 	f->swap_blocks = 0;

@@ -2,3 +2,5 @@
 lex.yy.*
 y.*
 compiler
+interpreter
+*.imp

@@ -1,14 +1,9 @@
 { komentarz }
 VAR
-	a b f[10] c
+	a b c
 BEGIN
 	READ a;
 	READ b;
-
-	IF a >= 10 THEN
-		WRITE a;
-	ELSE
-		c := a + b;
-		WRITE c;
-	ENDIF
+	c := 10 % 3;
+	WRITE c;
 END
