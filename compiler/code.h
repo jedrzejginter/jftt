@@ -245,17 +245,17 @@ struct RMLine *jscmd(char *command, int line) {
 	return c;
 }
 
-struct OutputCode *new_foobar() {
-	struct OutputCode *f = malloc(sizeof(struct OutputCode));
-
-	f->cmd_tree_size = 0;
-	f->add_cmd_tree_size = 0;
-	f->type = NULL;
-	f->value = 0;
-	f->swap_blocks = 0;
-
-	return f;
-}
+// struct OutputCode *new_foobar() {
+// 	struct OutputCode *f = malloc(sizeof(struct OutputCode));
+//
+// 	f->cmd_tree_size = 0;
+// 	f->add_cmd_tree_size = 0;
+// 	f->type = NULL;
+// 	f->value = 0;
+// 	f->swap_blocks = 0;
+//
+// 	return f;
+// }
 
 struct OutputCode *load_num_to_register(int num, int reg) {
 	struct OutputCode *f = malloc(sizeof(struct OutputCode));

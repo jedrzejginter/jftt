@@ -49,8 +49,8 @@ program : T_VAR vdeclarations T_BEG commands T_END {
 ;
 
 vdeclarations :
-	| vdeclarations T_PIDENTIFIER 					{ __declare_var($2, 0); }
-	| vdeclarations T_PIDENTIFIER '[' T_NUM ']' 	{ __declare_var($2, $4); }
+	| vdeclarations T_PIDENTIFIER 					{ __declare_var($2, 0, 1); }
+	| vdeclarations T_PIDENTIFIER '[' T_NUM ']' 	{ __declare_var($2, $4, 1); }
 ;
 
 commands : commands command	{ $$ = __insert_command($1, $2); }
@@ -128,7 +128,7 @@ identifier : T_PIDENTIFIER 					{ $$ = __Id($1, 0, NULL); }
 %%
 int main(int argc, char *argv[]) {
 	yyparse ();
-	__print_memory();
+	//__print_memory();
 	return 0;
 }
 
