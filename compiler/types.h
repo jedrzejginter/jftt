@@ -14,12 +14,14 @@ struct Id {
 	char *index_id;	// name[indexId] np `tab[a]`
 	int index_num;		// name[indexNum] np `tab[10]`
 	char *type;			// typ: num, arr
+	int ln;
 };
 
 struct Value {
 	char *type;		// typ wartości: { num, id }
 	struct Id *id;	// wskaźnik na wartość, jeśli type == id, else: NULL
 	int num;			// wartość jako int, jeśli type == num
+	int ln;
 };
 
 struct Condition {
@@ -54,4 +56,5 @@ struct Command {
 	struct Value *val2;		// wartość to/downto dla for
 
 	struct Command *next;	// wskaźnik na kolejną komendę (potrzebne dla listy komend)
+	int ln;
 };

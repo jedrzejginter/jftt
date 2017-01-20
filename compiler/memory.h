@@ -1,5 +1,6 @@
 struct Var {
 	char *name;
+	char *type;
 	int size;
 	int memory_index;
 	int is_mutable;		// czy można przypisać do zmiennej?
@@ -41,24 +42,35 @@ void __insert_var_to_mem(struct Var *v) {
 	mem->vars[mem->size++] = v;
 }
 
-void __declare_var(char *name, int array_size, int is_mutable) {
+
+void __declare_var(char *name, int array_size, int is_mutable, char *type) {
 	if (__get_var(name) != NULL) {
-		printf("Symbol `%s` już został zadeklarowany\n", name);
-		return;
+		__err_dup_decl(PR_LINE, name);
+
+	} else if (strcmp(type, "arr") == 0 && array_size <= 0) {
+		__err_bad_array_init(PR_LINE, name);
+
+	} else {
+
+		struct Var *v = malloc(sizeof(struct Var));
+
+		v->name = name;
+		v->type = (array_size == 0)? "num" : "arr";
+		v->size = (array_size == 0)? 1: array_size;
+		v->memory_index = 0;
+		v->is_mutable = is_mutable;
+		v->is_initialized = 0;
+
+		__insert_var_to_mem(v);
 	}
-
-	struct Var *v = malloc(sizeof(struct Var));
-
-	v->name = name;
-	v->size = (array_size == 0)? 1: array_size;
-	v->memory_index = 0;
-	v->is_mutable = is_mutable;
-
-	__insert_var_to_mem(v);
 }
 
 void __unset_var(char *name) {
 	mem->size--;
+}
+
+void __set_var_init(char *name) {
+	__get_var(name)->is_initialized = 1;
 }
 
 void __print_memory() {

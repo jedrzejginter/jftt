@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "helpers.h"
+#include "errors.h"
 #include "types.h"
 #include "code.h"
 #include "memory.h"
@@ -31,7 +31,7 @@ void yyerror(char *);
 %token T_FOR T_FROM T_TO T_ENDFOR T_DOWNTO T_READ T_WRITE T_SKIP
 %token T_EQ T_NE T_LT T_GT T_LE T_GE
 %token T_ASSGNOP
-%token T_NEWLINE
+%token T_NEWLINE T_SEMICOLON T_OP_BRACKET T_CL_BRACKET
 %token <num> T_NUM
 %token <var> T_PIDENTIFIER
 %type <id> identifier
@@ -45,19 +45,30 @@ void yyerror(char *);
 
 %%
 program : T_VAR vdeclarations T_BEG commands T_END {
-	print_cmd_tree(code_gen($4), 0); }
+
+	if (ERRORS > 0) {
+		exit(0);
+	} else {
+		struct OutputCode *oc = code_gen($4);
+
+		if (ERRORS > 0) {
+			exit(0);
+		} else {
+			print_cmd_tree(oc, 0); }
+		}
+	}
 ;
 
 vdeclarations :
-	| vdeclarations T_PIDENTIFIER 					{ __declare_var($2, 0, 1); }
-	| vdeclarations T_PIDENTIFIER '[' T_NUM ']' 	{ __declare_var($2, $4, 1); }
+	| vdeclarations T_PIDENTIFIER 											{ __declare_var($2, 0, 1, "num"); }
+	| vdeclarations T_PIDENTIFIER T_OP_BRACKET T_NUM T_CL_BRACKET 	{ __declare_var($2, $4, 1, "arr"); }
 ;
 
 commands : commands command	{ $$ = __insert_command($1, $2); }
 	| command 						{ $$ = __insert_command(NULL, $1); }
 ;
 
-command : identifier T_ASSGNOP expression ';' {
+command : identifier T_ASSGNOP expression T_SEMICOLON {
 		$$ = __Command("assign");
 		$$->id = $1;
 		$$->expr = $3;
@@ -87,15 +98,15 @@ command : identifier T_ASSGNOP expression ';' {
 		$$->val2 = $6;
 		$$->cmd1 = $8;
 	}
-	| T_READ identifier ';' {
+	| T_READ identifier T_SEMICOLON {
 		$$ = __Command("read");
 		$$->id = $2;
 	}
-	| T_WRITE value ';' {
+	| T_WRITE value T_SEMICOLON {
 		$$ = __Command("write");
 		$$->val1 = $2;
 	}
-	| T_SKIP ';' {
+	| T_SKIP T_SEMICOLON {
 		$$ = __Command("skip");
 	}
 ;
@@ -116,22 +127,21 @@ condition : value T_EQ value 	{ $$ = __Condition($1, $3, "="); }
 	| value T_GE value 			{ $$ = __Condition($1, $3, ">="); }
 ;
 
-value: T_NUM 		{ $$ = __Value("num", $1, NULL); }
-	| identifier 	{ $$ = __Value("id", 0, $1); }
+value: T_NUM 		{ $$ = __Value("num", $1, NULL); $$->ln = PR_LINE; }
+	| identifier 	{ $$ = __Value("id", 0, $1); $$->ln = PR_LINE; }
 ;
 
-identifier : T_PIDENTIFIER 					{ $$ = __Id($1, 0, NULL); }
-	| T_PIDENTIFIER '[' T_PIDENTIFIER ']' 	{ $$ = __Id($1, 0, $3); }
-	| T_PIDENTIFIER '[' T_NUM ']' 			{ $$ = __Id($1, $3, NULL); }
+identifier : T_PIDENTIFIER 											{ $$ = __Id($1, 0, NULL);	$$->ln = PR_LINE; }
+	| T_PIDENTIFIER T_OP_BRACKET T_PIDENTIFIER T_CL_BRACKET 	{ $$ = __Id($1, 0, $3);		$$->ln = PR_LINE; }
+	| T_PIDENTIFIER T_OP_BRACKET T_NUM T_CL_BRACKET 			{ $$ = __Id($1, $3, NULL);	$$->ln = PR_LINE; }
 ;
 
 %%
 int main(int argc, char *argv[]) {
 	yyparse ();
-	//__print_memory();
 	return 0;
 }
 
 void yyerror(char *s) {
-	printf("Error: %s\n", s);
+	__err_bad_syntax();
 }

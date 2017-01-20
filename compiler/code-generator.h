@@ -1,3 +1,5 @@
+#include <math.h>
+
 struct NumAsBinary {
 	int bin[1024];
 	int size;
@@ -29,14 +31,19 @@ struct OutputCode *id_addr_to_reg(struct Id *id, int reg) {
 	struct Var *v = __get_var(id->name);
 
 	if (strcmp(id->type, "arr") == 0) {
+		if (strcmp(v->type, "num") == 0) {
+			__err_wrong_use(id->ln, v->name);
+			exit(0);
+		}
+
 		// tab[]
 		if (id->index_id != NULL) {
 			// tab[var]
 			struct Var *vv = __get_var(id->index_id);
-			struct OutputCode *oc = fill_reg_with_num(v->memory_index, 1);
+			struct OutputCode *oc = fill_reg_with_num(v->memory_index, 4);
 			oc = merge(oc, fill_reg_with_num(vv->memory_index, 0));
-			oc = insert(oc, cmd("ADD", 1));
-			oc = insert(oc, cmd("COPY", 1));
+			oc = insert(oc, cmd("ADD", 4));
+			oc = insert(oc, cmd("COPY", 4));
 			return oc;
 		} else {
 			// tab[192]
@@ -45,8 +52,12 @@ struct OutputCode *id_addr_to_reg(struct Id *id, int reg) {
 		}
 	} else {
 		// xyz
-		return fill_reg_with_num(v->memory_index, 0);
+		if (strcmp(v->type, "arr") == 0) {
+			__err_wrong_use(id->ln, v->name);
+			exit(0);
+		}
 
+		return fill_reg_with_num(v->memory_index, 0);
 	}
 }
 
@@ -57,126 +68,338 @@ struct OutputCode *process_expression(struct Expression *e) {
 	v1 = e->val1;
 	v2 = e->val2;
 
-	if (strcmp(e->op, "+") == 0) {
-		if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "num") == 0) {
-			/*
-			ok
-			*/
-			oc = merge(oc, fill_reg_with_num(v1->num + v2->num, 1));
+	if (e->op == NULL) {
 
-		} else if (strcmp(v1->type, "id") == 0 && strcmp(v2->type, "id") == 0) {
+		if (strcmp(v1->type, "num") == 0) {
 			/*
 			ok
 			*/
-			oc = merge(oc, id_addr_to_reg(v1->id, 0));
-			oc = insert(oc, cmd("LOAD", 1));
-
-			oc = merge(oc, id_addr_to_reg(v2->id, 0));
-			oc = insert(oc, cmd("ADD", 1));
-		} else if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "id") == 0) {
-			/*
-			ok
-			*/
-			oc = merge(oc, fill_reg_with_num(v1->num, 1));
-			oc = merge(oc, id_addr_to_reg(v2->id, 0));
-			oc = insert(oc, cmd("ADD", 1));
+			oc = fill_reg_with_num(v1->num, 1);
 		} else {
 			/*
 			ok
 			*/
-			oc = merge(oc, id_addr_to_reg(v1->id, 0));
-			oc = merge(oc, fill_reg_with_num(v2->num, 1));
-			oc = insert(oc, cmd("ADD", 1));
-		}
+			struct Var *var = __get_var(v1->id->name);
 
-	} else if (strcmp(e->op, "-") == 0) {
-		if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "num") == 0) {
-			val = v1->num - v2->num;
-			val = val < 0? 0 : val;
+			if (var == NULL) {
+				__err_undecl_var(v1->id->ln, var->name);
+				exit(0);
 
-			oc = merge(oc, fill_reg_with_num(val, 1));
+			} else if (var->is_initialized == 0) {
+				__err_uninit_var(v1->id->ln, var->name);
 
-		} else if (strcmp(v1->type, "id") == 0 && strcmp(v2->type, "id") == 0) {
-			oc = merge(oc, id_addr_to_reg(v1->id, 0));
-			oc = insert(oc, cmd("LOAD", 1));
-
-			oc = merge(oc, id_addr_to_reg(v2->id, 0));
-			oc = insert(oc, cmd("SUB", 1));
-		} else if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "id") == 0) {
-			oc = merge(oc, fill_reg_with_num(v1->num, 1));
-			oc = merge(oc, id_addr_to_reg(v2->id, 0));
-			oc = insert(oc, cmd("SUB", 1));
-		} else {
-			oc = merge(oc, id_addr_to_reg(v1->id, 0));
-			oc = insert(oc, cmd("LOAD", 1));
-
-			oc = merge(oc, fill_reg_with_num(v2->num, 0));
-			oc = insert(oc, jcmd("JZERO", 0, 4));
-			oc = insert(oc, cmd("DEC", 0));
-			oc = insert(oc, cmd("DEC", 1));
-			oc = insert(oc, jscmd("JUMP", -3));
-		}
-	} else if (strcmp(e->op, "*") == 0) {
-		if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "num") == 0) {
-			val = v1->num * v2->num;
-
-			oc = merge(oc, fill_reg_with_num(val, 1));
-
-		} else if (strcmp(v1->type, "id") == 0 && strcmp(v2->type, "num") == 0) {
-			oc = fill_reg_with_num(v2->num, 4);
-			oc = merge(oc, id_addr_to_reg(v1->id, 0));
-			oc = merge(oc, fill_reg_with_num(0, 1));
-			oc = insert(oc, jcmd("JZERO", 4, 4));
-			oc = insert(oc, cmd("ADD", 1));
-			oc = insert(oc, cmd("DEC", 4));
-			oc = insert(oc, jscmd("JUMP", -3));
-
-		} else if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "id") == 0) {
-			oc = fill_reg_with_num(v1->num, 4);
-			oc = merge(oc, id_addr_to_reg(v2->id, 0));
-			oc = merge(oc, fill_reg_with_num(0, 1));
-			oc = insert(oc, jcmd("JZERO", 4, 4));
-			oc = insert(oc, cmd("ADD", 1));
-			oc = insert(oc, cmd("DEC", 4));
-			oc = insert(oc, jscmd("JUMP", -3));
-
-		} else if (strcmp(v1->type, "id") == 0 && strcmp(v2->type, "id") == 0) {
-			oc = id_addr_to_reg(v2->id, 0);
-			oc = insert(oc, cmd("LOAD", 4));
-			oc = merge(oc, id_addr_to_reg(v1->id, 0));
-			oc = merge(oc, fill_reg_with_num(0, 1));
-			oc = insert(oc, jcmd("JZERO", 4, 4));
-			oc = insert(oc, cmd("ADD", 1));
-			oc = insert(oc, cmd("DEC", 4));
-			oc = insert(oc, jscmd("JUMP", -3));
-
-		}
-
-	} else if (strcmp(e->op, "/") == 0) {
-		if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "num") == 0) {
-			if (v2->num == 0) {
-				val = 0;
 			} else {
-				val = (v1->num - v1->num % v2->num) / v2->num;
+
+				oc = id_addr_to_reg(v1->id, 0);
+				oc = insert(oc, cmd("LOAD", 1));
+			}
+		}
+
+	} else {
+		struct Var *var;
+
+		if (strcmp(v1->type, "id") == 0) {
+			var = __get_var(v1->id->name);
+
+			if (var == NULL) {
+				__err_undecl_var(v1->id->ln, var->name);
+				exit(0);
+
+			} else if (var->is_initialized == 0) {
+				__err_uninit_var(v1->id->ln, var->name);
+				return oc;
+
+			}
+		}
+
+		if (strcmp(v2->type, "id") == 0) {
+			var = __get_var(v2->id->name);
+
+			if (var == NULL) {
+				__err_undecl_var(v2->id->ln, var->name);
+				exit(0);
+
+			} else if (var->is_initialized == 0) {
+				__err_uninit_var(v2->id->ln, var->name);
+				return oc;
+			}
+		}
+
+		if (strcmp(e->op, "+") == 0) {
+			if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "num") == 0) {
+				/*
+				ok
+				*/
+				oc = merge(oc, fill_reg_with_num(v1->num + v2->num, 1));
+
+			} else if (strcmp(v1->type, "id") == 0 && strcmp(v2->type, "id") == 0) {
+				/*
+				ok
+				*/
+				oc = merge(oc, id_addr_to_reg(v1->id, 0));
+				oc = insert(oc, cmd("LOAD", 1));
+
+				oc = merge(oc, id_addr_to_reg(v2->id, 0));
+				oc = insert(oc, cmd("ADD", 1));
+			} else if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "id") == 0) {
+				/*
+				ok
+				*/
+				oc = merge(oc, fill_reg_with_num(v1->num, 1));
+				oc = merge(oc, id_addr_to_reg(v2->id, 0));
+				oc = insert(oc, cmd("ADD", 1));
+			} else {
+				/*
+				ok
+				*/
+				oc = merge(oc, id_addr_to_reg(v1->id, 0));
+				oc = merge(oc, fill_reg_with_num(v2->num, 1));
+				oc = insert(oc, cmd("ADD", 1));
 			}
 
-			val = val < 0? 0 : val;
+		} else if (strcmp(e->op, "-") == 0) {
+			if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "num") == 0) {
+				/*
+				ok
+				10 - 9
+				*/
+				val = v1->num - v2->num;
+				val = val < 0? 0 : val;
 
-			oc = merge(oc, fill_reg_with_num(val, 1));
+				oc = merge(oc, fill_reg_with_num(val, 1));
 
-		} else if (strcmp(v1->type, "id") == 0 && strcmp(v2->type, "num") == 0) {
-			oc = id_addr_to_reg(v1->id, 0);
-			oc = insert(oc, cmd("LOAD", 1));
-			oc = insert(oc, cmd("SHR", 1));
+			} else if (strcmp(v1->type, "id") == 0 && strcmp(v2->type, "id") == 0) {
+				/*
+				ok
+				a - b
+				*/
+				oc = merge(oc, id_addr_to_reg(v1->id, 0));
+				oc = insert(oc, cmd("LOAD", 1));
 
-		}
+				oc = merge(oc, id_addr_to_reg(v2->id, 0));
+				oc = insert(oc, cmd("SUB", 1));
 
-	} else if (strcmp(e->op, "%") == 0) {
-		if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "num") == 0) {
-			val = v1->num % v2->num;
+			} else if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "id") == 0) {
+				/*
+				ok
+				10 - a
+				*/
+				oc = merge(oc, fill_reg_with_num(v1->num, 1));
+				oc = merge(oc, id_addr_to_reg(v2->id, 0));
+				oc = insert(oc, cmd("SUB", 1));
 
-			oc = merge(oc, fill_reg_with_num(val, 1));
+			} else {
+				/*
+				ok
+				a - 10
+				*/
+				struct Id *tmp_id = __Id("_tmp0", 0, NULL);
 
+				__declare_var("_tmp0", 0, 0, "num");
+				oc = merge(oc, id_addr_to_reg(v1->id, 0));
+				oc = insert(oc, cmd("LOAD", 1));
+
+				oc = merge(oc, id_addr_to_reg(tmp_id, 0));
+
+				oc = merge(oc, fill_reg_with_num(v2->num, 4));
+				oc = insert(oc, cmd("STORE", 4));
+				oc = insert(oc, cmd("SUB", 1));
+				__unset_var("_tmp0");
+			}
+		} else if (strcmp(e->op, "*") == 0) {
+			if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "num") == 0) {
+				/*
+				ok
+				10 * 7
+				*/
+				val = v1->num * v2->num;
+
+				oc = merge(oc, fill_reg_with_num(val, 1));
+
+
+			} else if (strcmp(v1->type, "id") == 0 && strcmp(v2->type, "id") == 0) {
+					/*
+					ok
+					TODO: kosztowne, nielogarytmiczne, ale działa
+					id * id
+					*/
+					oc = id_addr_to_reg(v2->id, 0);
+					oc = insert(oc, cmd("LOAD", 4));
+					oc = merge(oc, id_addr_to_reg(v1->id, 0));
+					oc = merge(oc, fill_reg_with_num(0, 1));
+					oc = insert(oc, jcmd("JZERO", 4, 4));
+					oc = insert(oc, cmd("ADD", 1));
+					oc = insert(oc, cmd("DEC", 4));
+					oc = insert(oc, jscmd("JUMP", -3));
+
+			} else if (strcmp(v1->type, "id") == 0 && strcmp(v2->type, "num") == 0) {
+				/*
+				ok
+				TODO: kosztowne, nielogarytmiczne, ale działa
+				id * 10
+				*/
+				double l = log2(v2->num);
+
+				if (v2->num == 0) {
+					oc = fill_reg_with_num(0, 1);
+
+				} else if ((l - l/1) == 0) {
+					int it = log2(v2->num);
+
+					oc = id_addr_to_reg(v1->id, 0);
+					oc = insert(oc, cmd("LOAD", 1));
+
+					for (int i = 1; i <= it; i++) {
+						oc = insert(oc, cmd("SHL", 1));
+					}
+				} else {
+
+					oc = fill_reg_with_num(v2->num, 4);
+					oc = merge(oc, id_addr_to_reg(v1->id, 0));
+					oc = merge(oc, fill_reg_with_num(0, 1));
+					oc = insert(oc, jcmd("JZERO", 4, 4));
+					oc = insert(oc, cmd("ADD", 1));
+					oc = insert(oc, cmd("DEC", 4));
+					oc = insert(oc, jscmd("JUMP", -3));
+				}
+
+			} else {
+				/*
+				ok
+				TODO: kosztowne, nielogarytmiczne, ale działa
+				10 * id
+				*/
+				double l = log2(v2->num);
+
+				if (v1->num == 0) {
+					oc = fill_reg_with_num(0, 1);
+
+				} else if ((l - l/1) == 0) {
+					int it = log2(v1->num);
+
+					oc = id_addr_to_reg(v2->id, 0);
+					oc = insert(oc, cmd("LOAD", 1));
+
+					for (int i = 1; i <= it; i++) {
+						oc = insert(oc, cmd("SHL", 1));
+					}
+				} else {
+
+					oc = fill_reg_with_num(v1->num, 4);
+					oc = merge(oc, id_addr_to_reg(v2->id, 0));
+					oc = merge(oc, fill_reg_with_num(0, 1));
+					oc = insert(oc, jcmd("JZERO", 4, 4));
+					oc = insert(oc, cmd("ADD", 1));
+					oc = insert(oc, cmd("DEC", 4));
+					oc = insert(oc, jscmd("JUMP", -3));
+				}
+			}
+
+		} else if (strcmp(e->op, "/") == 0) {
+			if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "num") == 0) {
+				/*
+				ok
+				11 / 2
+				*/
+				if (v2->num == 0) {
+					val = 0;
+					__warn_div_0(v2->ln);
+
+				} else {
+					val = (v1->num - v1->num % v2->num) / v2->num;
+				}
+
+				val = val < 0? 0 : val;
+
+				oc = fill_reg_with_num(val, 1);
+
+			} else if (strcmp(v1->type, "id") == 0 && strcmp(v2->type, "id") == 0) {
+				/*
+				ok
+				a / b
+				*/
+				oc = id_addr_to_reg(v1->id, 0);
+				oc = insert(oc, cmd("LOAD", 4));
+				oc = merge(oc, id_addr_to_reg(v2->id, 0));
+				oc = insert(oc, cmd("LOAD", 1));
+				oc = insert(oc, jcmd("JZERO", 1, 8));
+				oc = insert(oc, cmd("ZERO", 1));
+				oc = insert(oc, cmd("INC", 4));
+				oc = insert(oc, jcmd("JZERO", 4, 4));
+				oc = insert(oc, cmd("SUB", 4));
+				oc = insert(oc, cmd("INC", 1));
+				oc = insert(oc, jscmd("JUMP", -3));
+				oc = insert(oc, cmd("DEC", 1));
+
+			} else if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "id") == 0) {
+				/*
+				ok
+				11 / a
+				*/
+				if (v1->num == 0) {
+					oc = fill_reg_with_num(0, 1);
+
+				} else {
+					oc = fill_reg_with_num(v1->num, 4);
+					oc = merge(oc, id_addr_to_reg(v2->id, 0));
+					oc = insert(oc, cmd("LOAD", 1));
+					oc = insert(oc, jcmd("JZERO", 1, 8));
+					oc = insert(oc, cmd("ZERO", 1));
+					oc = insert(oc, cmd("INC", 4));
+					oc = insert(oc, jcmd("JZERO", 4, 4));
+					oc = insert(oc, cmd("SUB", 4));
+					oc = insert(oc, cmd("INC", 1));
+					oc = insert(oc, jscmd("JUMP", -3));
+					oc = insert(oc, cmd("DEC", 1));
+				}
+			} else {
+				/*
+				ok
+				a / 2
+				*/
+				double l = log2(v2->num);
+
+				if (v2->num == 0) {
+					oc = fill_reg_with_num(0, 1);
+					__warn_div_0(PR_LINE);
+
+				} else if ((l - l/1) == 0) {
+					int it = log2(v2->num);
+
+					oc = id_addr_to_reg(v1->id, 0);
+					oc = insert(oc, cmd("LOAD", 1));
+
+					for (int i = 1; i <= it; i++) {
+						oc = insert(oc, cmd("SHR", 1));
+					}
+				} else {
+					struct Id *tmp_id = __Id("_tmp0", 0, NULL);
+
+					__declare_var(tmp_id->name, 0, 0, "num");
+					oc = id_addr_to_reg(v1->id, 0);
+					oc = insert(oc, cmd("LOAD", 4));
+					oc = merge(oc, id_addr_to_reg(tmp_id, 0));
+					oc = merge(oc, fill_reg_with_num(v2->num, 1));
+					oc = insert(oc, jcmd("JZERO", 1, 9));
+					oc = insert(oc, cmd("STORE", 1));
+					oc = insert(oc, cmd("ZERO", 1));
+					oc = insert(oc, cmd("INC", 4));
+					oc = insert(oc, jcmd("JZERO", 4, 4));
+					oc = insert(oc, cmd("SUB", 4));
+					oc = insert(oc, cmd("INC", 1));
+					oc = insert(oc, jscmd("JUMP", -3));
+					oc = insert(oc, cmd("DEC", 1));
+					__unset_var(tmp_id->name);
+				}
+			}
+
+		} else if (strcmp(e->op, "%") == 0) {
+			if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "num") == 0) {
+				val = v1->num % v2->num;
+
+				oc = fill_reg_with_num(val, 1);
+
+			}
 		}
 	}
 
@@ -189,6 +412,35 @@ struct OutputCode *process_condition(struct Condition *c) {
 	v1 = c->val1;
 	v2 = c->val2;
 
+	struct Var *var;
+
+	if (strcmp(v1->type, "id") == 0) {
+		var = __get_var(v1->id->name);
+
+		if (var == NULL) {
+			__err_undecl_var(v1->id->ln, var->name);
+			exit(0);
+
+		} else if (var->is_initialized == 0) {
+			__err_uninit_var(v1->id->ln, var->name);
+			return oc;
+
+		}
+	}
+
+	if (strcmp(v2->type, "id") == 0) {
+		var = __get_var(v2->id->name);
+
+		if (var == NULL) {
+			__err_undecl_var(v2->id->ln, var->name);
+			exit(0);
+
+		} else if (var->is_initialized == 0) {
+			__err_uninit_var(v2->id->ln, var->name);
+			return oc;
+		}
+	}
+
 	if (strcmp(c->rel, "=") == 0) {
 		if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "num") == 0) {
 			/*
@@ -199,8 +451,10 @@ struct OutputCode *process_condition(struct Condition *c) {
 
 			if (v1->num == v2->num) {
 				val = 1;
+				__warn_always_true(v1->ln);
 			} else {
 				val = 0;
+				__warn_always_false(v1->ln);
 			}
 
 			oc = fill_reg_with_num(val, 1);
@@ -265,8 +519,10 @@ struct OutputCode *process_condition(struct Condition *c) {
 
 			if (v1->num != v2->num) {
 				val = 1;
+				__warn_always_true(v1->ln);
 			} else {
 				val = 0;
+				__warn_always_false(v1->ln);
 			}
 
 			oc = fill_reg_with_num(val, 1);
@@ -284,11 +540,6 @@ struct OutputCode *process_condition(struct Condition *c) {
 
 			oc = insert(oc, jcmd("JZERO", 1, 3));
 			oc = insert(oc, cmd("DEC", 1));
-			oc = insert(oc, jcmd("JZERO", 1, 4));
-			oc = insert(oc, cmd("ZERO", 1));
-			oc = insert(oc, cmd("INC", 1));
-			oc = insert(oc, jscmd("JUMP", 2));
-			oc = insert(oc, cmd("ZERO", 1));
 
 		} else if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "id") == 0) {
 			/*
@@ -322,15 +573,21 @@ struct OutputCode *process_condition(struct Condition *c) {
 
 			oc = insert(oc, jcmd("JZERO", 1, 3));
 			oc = insert(oc, cmd("DEC", 1));
-			oc = insert(oc, jcmd("JZERO", 1, 4));
-			oc = insert(oc, cmd("ZERO", 1));
-			oc = insert(oc, cmd("INC", 1));
-			oc = insert(oc, jscmd("JUMP", 2));
-			oc = insert(oc, cmd("ZERO", 1));
 		}
 	} else if (strcmp(c->rel, "<") == 0) {
 		if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "num") == 0) {
-			int val = (v1->num < v2->num)? 1 : 0;
+			/*
+			ok
+			10 < 11
+			*/
+			int val;
+			if (v1->num < v2->num) {
+				val = 1;
+				__warn_always_true(v1->ln);
+			} else {
+				val = 0;
+				__warn_always_false(v1->ln);
+			}
 
 			oc = fill_reg_with_num(val, 1);
 
@@ -371,18 +628,26 @@ struct OutputCode *process_condition(struct Condition *c) {
 			a < 10
 			*/
 			oc = fill_reg_with_num(v2->num, 1);
-			oc = insert(oc, cmd("DEC", 1));
 
 			oc = merge(oc, id_addr_to_reg(v1->id, 0));
 			oc = insert(oc, cmd("SUB", 1));
 
-			oc = insert(oc, jcmd("JZERO", 1, 3));
-			oc = insert(oc, cmd("ZERO", 1));
-			oc = insert(oc, cmd("INC", 1));
 		}
 	} else if (strcmp(c->rel, ">") == 0) {
 		if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "num") == 0) {
-			int val = (v1->num > v2->num)? 1 : 0;
+			/*
+			ok
+			10 > 9
+			*/
+			int val;
+
+			if (v1->num > v2->num) {
+				val = 1;
+				__warn_always_true(v1->ln);
+			} else {
+				val = 0;
+				__warn_always_false(v1->ln);
+			}
 
 			oc = fill_reg_with_num(val, 1);
 
@@ -396,22 +661,16 @@ struct OutputCode *process_condition(struct Condition *c) {
 
 			oc = merge(oc, id_addr_to_reg(v2->id, 0));
 			oc = insert(oc, cmd("SUB", 1));
-			oc = insert(oc, jcmd("JZERO", 1, 3));
-			oc = insert(oc, cmd("ZERO", 1));
-			oc = insert(oc, cmd("INC", 1));
 
 		} else if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "id") == 0) {
 			/*
 			ok
-			10 > b
+			10 > a
 			*/
 			oc = fill_reg_with_num(v1->num, 1);
 
 			oc = merge(oc, id_addr_to_reg(v2->id, 0));
 			oc = insert(oc, cmd("SUB", 1));
-			oc = insert(oc, jcmd("JZERO", 1, 3));
-			oc = insert(oc, cmd("ZERO", 1));
-			oc = insert(oc, cmd("INC", 1));
 
 		} else {
 			/*
@@ -430,54 +689,118 @@ struct OutputCode *process_condition(struct Condition *c) {
 		}
 
 	} else if (strcmp(c->rel, "<=") == 0) {
-		if (strcmp(v1->type, "id") == 0 && strcmp(v2->type, "id") == 0) {
-			oc = id_addr_to_reg(v2->id, 0);
-			oc = insert(oc, cmd("LOAD", 1));
-			oc = merge(oc, id_addr_to_reg(v1->id, 0));
-			oc = insert(oc, cmd("INC", 1));
-			oc = insert(oc, cmd("SUB", 1));
+		if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "num") == 0) {
+			/*
+			ok
+			10 <= 10
+			*/
 
-		} else if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "num") == 0) {
-			int val = (v1->num <= v2->num)? 1 : 0;
+			int val;
+
+			if (v1->num <= v2->num) {
+				val = 1;
+				__warn_always_true(v1->ln);
+			} else {
+				val = 0;
+				__warn_always_false(v1->ln);
+			}
 
 			oc = fill_reg_with_num(val, 1);
-		} else if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "id") == 0) {
-			oc = fill_reg_with_num(v1->num, 1);
+		} else if (strcmp(v1->type, "id") == 0 && strcmp(v2->type, "id") == 0) {
+			/*
+			ok
+			a <= b
+			*/
+			oc = id_addr_to_reg(v1->id, 0);
+			oc = insert(oc, cmd("LOAD", 1));
+
 			oc = merge(oc, id_addr_to_reg(v2->id, 0));
 			oc = insert(oc, cmd("SUB", 1));
+			oc = insert(oc, jcmd("JZERO", 1, 3));
+			oc = insert(oc, cmd("ZERO", 1));
+			oc = insert(oc, jscmd("JUMP", 2));
+			oc = insert(oc, cmd("INC", 1));
 
-			oc->swap_blocks = 1;
+		} else if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "id") == 0) {
+			/*
+			ok
+			10 <= a
+			*/
+			oc = fill_reg_with_num(v1->num, 1);
+
+			oc = merge(oc, id_addr_to_reg(v2->id, 0));
+			oc = insert(oc, cmd("SUB", 1));
+			oc = insert(oc, jcmd("JZERO", 1, 3));
+			oc = insert(oc, cmd("ZERO", 1));
+			oc = insert(oc, jscmd("JUMP", 2));
+			oc = insert(oc, cmd("INC", 1));
 
 		} else {
-			oc = id_addr_to_reg(v1->id, 0);
-			oc = merge(oc, fill_reg_with_num(v2->num, 1));
+			/*
+			ok
+			a <= 10
+			*/
+			oc = fill_reg_with_num(v2->num, 1);
 			oc = insert(oc, cmd("INC", 1));
+
+			oc = merge(oc, id_addr_to_reg(v1->id, 0));
 			oc = insert(oc, cmd("SUB", 1));
 		}
-	} else {
-		if (strcmp(v1->type, "id") == 0 && strcmp(v2->type, "id") == 0) {
-			oc = id_addr_to_reg(v1->id, 0);
-			oc = insert(oc, cmd("LOAD", 1));
-			oc = merge(oc, id_addr_to_reg(v2->id, 0));
-			oc = insert(oc, cmd("INC", 1));
-			oc = insert(oc, cmd("SUB", 1));
+	} else if (strcmp(c->rel, ">=") == 0) {
 
-		} else if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "num") == 0) {
-			int val = (v1->num >= v2->num)? 1 : 0;
+		if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "num") == 0) {
+			/*
+			ok
+			10 >= 8
+			*/
+			int val;
+
+			if (v1->num >= v2->num) {
+				val = 1;
+				__warn_always_true(v1->ln);
+			} else {
+				val = 0;
+				__warn_always_false(v1->ln);
+			}
 
 			oc = fill_reg_with_num(val, 1);
-		} else if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "id") == 0) {
-			oc = fill_reg_with_num(v1->num, 1);
-			oc = merge(oc, id_addr_to_reg(v2->id, 0));
+		} else if (strcmp(v1->type, "id") == 0 && strcmp(v2->type, "id") == 0) {
+			/*
+			ok
+			a >= b
+			*/
+			oc = id_addr_to_reg(v2->id, 0);
+			oc = insert(oc, cmd("LOAD", 1));
+
+			oc = merge(oc, id_addr_to_reg(v1->id, 0));
+			oc = insert(oc, cmd("SUB", 1));
+			oc = insert(oc, jcmd("JZERO", 1, 3));
+			oc = insert(oc, cmd("ZERO", 1));
+			oc = insert(oc, jscmd("JUMP", 2));
 			oc = insert(oc, cmd("INC", 1));
+
+		} else if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "id") == 0) {
+			/*
+			ok
+			10 >= a
+			*/
+			oc = fill_reg_with_num(v1->num, 1);
+			oc = insert(oc, cmd("INC", 1));
+			oc = merge(oc, id_addr_to_reg(v2->id, 0));
 			oc = insert(oc, cmd("SUB", 1));
 
 		} else {
-			oc = id_addr_to_reg(v1->id, 0);
-			oc = merge(oc, fill_reg_with_num(v2->num, 1));
+			/*
+			ok
+			a >= 10
+			*/
+			oc = fill_reg_with_num(v2->num, 1);
+			oc = merge(oc, id_addr_to_reg(v1->id, 0));
 			oc = insert(oc, cmd("SUB", 1));
-
-			oc->swap_blocks = 1;
+			oc = insert(oc, jcmd("JZERO", 1, 3));
+			oc = insert(oc, cmd("ZERO", 1));
+			oc = insert(oc, jscmd("JUMP", 2));
+			oc = insert(oc, cmd("INC", 1));
 		}
 	}
 
@@ -491,22 +814,31 @@ struct OutputCode *command_gen(struct Command *c) {
 	if (strcmp(c->type, "read") == 0) {
 		/* OK */
 		var = __get_var(c->id->name);
-		if (var == NULL) {
-			printf("Niezadeklarowana zmienna: %s\n", c->id->name);
-			exit(1);
-		}
 
-		oc = merge(oc, id_addr_to_reg(c->id, 0));
-		oc = insert(oc, cmd("GET", 1));
-		oc = insert(oc, cmd("STORE", 1));
+		if (var == NULL) {
+			__err_undecl_var(c->id->ln, c->id->name);
+			exit(0);
+		} else if (var->is_mutable == 0) {
+			__err_not_mut(c->id->ln, c->id->name);
+
+		} else {
+
+			oc = merge(oc, id_addr_to_reg(c->id, 0));
+			oc = insert(oc, cmd("GET", 1));
+			oc = insert(oc, cmd("STORE", 1));
+			__set_var_init(c->id->name);
+		}
 
 	} else if (strcmp(c->type, "write") == 0) {
 		/* OK */
 		if (strcmp(c->val1->type, "id") == 0) {
 			var = __get_var(c->val1->id->name);
+
 			if (var == NULL) {
-				printf("Niezadeklarowana zmienna: %s\n", c->val1->id->name);
-				exit(1);
+				__err_undecl_var(c->val1->id->ln, c->val1->id->name);
+				exit(0);
+			} else if (var->is_initialized == 0) {
+				__err_uninit_var(c->val1->id->ln, var->name);
 			}
 		}
 
@@ -519,14 +851,20 @@ struct OutputCode *command_gen(struct Command *c) {
 	} else if (strcmp(c->type, "assign") == 0) {
 		/* OK */
 		var = __get_var(c->id->name);
-		if (var->is_mutable == 0) {
-			printf("Iterator pętli `%s` nie może być modyfikowany!\n", c->id->name);
-			exit(1);
-		}
+		if (var == NULL) {
+			__err_undecl_var(c->id->ln, c->id->name);
+			exit(0);
 
-		oc = merge(oc, process_expression(c->expr));
-		oc = merge(oc, id_addr_to_reg(c->id, 0));
-		oc = insert(oc, cmd("STORE", 1));
+		} else if (var->is_mutable == 0) {
+			__err_not_mut(c->id->ln, c->id->name);
+
+		} else {
+
+			oc = merge(oc, process_expression(c->expr));
+			oc = merge(oc, id_addr_to_reg(c->id, 0));
+			oc = insert(oc, cmd("STORE", 1));
+			__set_var_init(c->id->name);
+		}
 
 	} else if (strcmp(c->type, "if") == 0) {
 		/* OK, TODO: przetestować */
@@ -539,10 +877,10 @@ struct OutputCode *command_gen(struct Command *c) {
 		cmd1 = c->cmd1;
 		cmd2 = c->cmd2;
 
-		if (oc_cond->swap_blocks == 1) {
-			cmd1 = c->cmd2;
-			cmd2 = c->cmd1;
-		}
+		// if (oc_cond->swap_blocks == 1) {
+		// 	cmd1 = c->cmd2;
+		// 	cmd2 = c->cmd1;
+		// }
 
 		oc_cmd1 = code_gen(cmd1);
 		oc_cmd2 = code_gen(cmd2);
@@ -571,7 +909,7 @@ struct OutputCode *command_gen(struct Command *c) {
 
 		struct Id *lid = __Id(loop_id, 0, NULL);
 
-		__declare_var(loop_id, 0, 0);
+		__declare_var(loop_id, 0, 0, "num");
 
 		oc_cond = process_condition(c->cond);
 		oc_cmd = code_gen(c->cmd1);
@@ -589,14 +927,14 @@ struct OutputCode *command_gen(struct Command *c) {
 		oc2 = insert(oc2, cmd("STORE", 3));
 
 		int jumps = 1;
-		if (oc_cond->swap_blocks == 1) {
-			oc = insert(oc, jcmd("JZERO", 3, 2));
-			oc = insert(oc, jscmd("JUMP", oc2->cmd_tree_size + 2));
-			jumps = 2;
-
-		} else {
-			oc = insert(oc, jcmd("JZERO", 3, oc2->cmd_tree_size + 2));
-		}
+		// if (oc_cond->swap_blocks == 1) {
+		// 	oc = insert(oc, jcmd("JZERO", 3, 2));
+		// 	oc = insert(oc, jscmd("JUMP", oc2->cmd_tree_size + 2));
+		// 	jumps = 2;
+		//
+		// } else {
+		oc = insert(oc, jcmd("JZERO", 3, oc2->cmd_tree_size + 2));
+		//}
 
 		oc = merge(oc, oc2);
 		oc = insert(oc, jscmd("JUMP", -end_jump_ln - oc2->cmd_tree_size + 1 - jumps));
@@ -608,13 +946,13 @@ struct OutputCode *command_gen(struct Command *c) {
 		struct OutputCode *oc2;
 		char reg_cpy[16];
 
-		__declare_var(c->pid, 0, 0);
+		__declare_var(c->pid, 0, 0, "num");
 
 		v1 = c->val1;
 		v2 = c->val2;
 		sprintf(reg_cpy, "_for_%s", c->pid);
 
-		__declare_var(reg_cpy, 0, 0);
+		__declare_var(reg_cpy, 0, 0, "num");
 
 		struct Id *id = __Id(c->pid, 0, NULL);
 
@@ -697,13 +1035,13 @@ struct OutputCode *command_gen(struct Command *c) {
 		struct OutputCode *oc2;
 		char reg_cpy[16];
 
-		__declare_var(c->pid, 0, 0);
+		__declare_var(c->pid, 0, 0, "num");
 
 		v1 = c->val1;
 		v2 = c->val2;
 		sprintf(reg_cpy, "_for_%s", c->pid);
 
-		__declare_var(reg_cpy, 0, 0);
+		__declare_var(reg_cpy, 0, 0, "num");
 
 		struct Id *id = __Id(c->pid, 0, NULL);
 
@@ -724,7 +1062,7 @@ struct OutputCode *command_gen(struct Command *c) {
 			ok
 			FROM a DOWNTO 1
 			*/
-			__declare_var("_tmp0", 0, 0);
+			__declare_var("_tmp0", 0, 0, "num");
 			struct Id *tmp_id = __Id("_tmp0", 0, NULL);
 			oc = id_addr_to_reg(v1->id, 0);
 			oc = insert(oc, cmd("LOAD", 2));
@@ -743,7 +1081,7 @@ struct OutputCode *command_gen(struct Command *c) {
 			ok
 			FROM a DOWNTO 1
 			*/
-			__declare_var("_tmp0", 0, 0);
+			__declare_var("_tmp0", 0, 0, "num");
 			struct Id *tmp_id = __Id("_tmp0", 0, NULL);
 			oc = id_addr_to_reg(v1->id, 0);
 			oc = insert(oc, cmd("LOAD", 2));
@@ -806,21 +1144,6 @@ struct OutputCode *code_gen(struct Commands *cmds) {
 	return oc;
 }
 
-// struct NumAsBinary num_to_bin(int num) {
-// 	struct NumAsBinary bn = malloc(sizeof(struct NumAsBinary));
-//
-// 	int mod;
-//
-// 	while (num > 0) {
-// 		mod = num % 2;
-// 		num = (num - mod) / 2;
-//
-// 		bn->bin[bn->size++] = mod;
-// 	}
-//
-// 	return bn;
-// }
-
 struct OutputCode *fill_reg_with_num(int num, int reg) {
 	struct OutputCode *f = malloc(sizeof(struct OutputCode));
 
@@ -832,7 +1155,7 @@ struct OutputCode *fill_reg_with_num(int num, int reg) {
 	int mod;
 	int ix = 0;
 	int bin[1024];
-	//int org_num = num;
+	int org_num = num;
 
 	f = insert(f, cmd("ZERO", reg));
 
