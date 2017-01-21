@@ -19,21 +19,6 @@ struct OutputCode *code_gen(struct Commands *);
 
 int while_loop_id_cnt = 0;
 
-// struct OutputCode *value_to_reg(struct Value *v, int reg) {
-// 	struct OutputCode *oc;
-//
-// 	if (strcmp(v->type, "num") == 0) {
-// 		oc = fill_reg_with_num(v->num, 1);
-//
-// 	} else {
-// 		oc = id_addr_to_reg(v->id, 0);
-// 		oc = insert(oc, cmd("LOAD", 1));
-//
-// 	}
-//
-// 	return oc;
-// }
-
 void __set_reg_def(int reg, struct Var *v) {
 	R->reg[reg]->is_definite = v->is_definite;
 	R->reg[reg]->value = (v->is_definite == 1)? v->value : 0;
@@ -46,7 +31,7 @@ struct OutputCode *id_addr_to_reg(struct Id *id, int reg) {
 	if (strcmp(id->type, "arr") == 0) {
 		if (strcmp(v->type, "num") == 0) {
 			__err_wrong_use(id->ln, v->name);
-			exit(0);
+			exit(1);
 		}
 
 		// tab[]
@@ -66,25 +51,30 @@ struct OutputCode *id_addr_to_reg(struct Id *id, int reg) {
 				oc = fill_reg_with_num(v->memory_index, 4);
 				oc = merge(oc, fill_reg_with_num(vv->memory_index, 0));
 				oc = insert(oc, cmd("ADD", 4));
-				__set_reg_def(4, vv);
+				__set_reg_def(reg, vv);
 				oc = insert(oc, cmd("COPY", 4));
-				__copy_reg_def(4, 0);
+				__copy_reg_def(reg, 0);
 				return oc;
 			}
 
 		} else {
+			if (id->index_num >= v->size) {
+				__err_bad_array_ix(id->ln, id->index_num, v->name);
+				exit(1);
+			}
+
 			// tab[192]
-			return fill_reg_with_num(v->memory_index + id->index_num, 0);
+			return fill_reg_with_num(v->memory_index + id->index_num, reg);
 
 		}
 	} else {
 		// xyz
 		if (strcmp(v->type, "arr") == 0) {
 			__err_wrong_use(id->ln, v->name);
-			exit(0);
+			exit(1);
 		}
 
-		return fill_reg_with_num(v->memory_index, 0);
+		return fill_reg_with_num(v->memory_index, reg);
 	}
 }
 
@@ -120,7 +110,7 @@ struct OutputCode *process_expression(struct Expression *e) {
 
 			if (var == NULL) {
 				__err_undecl_var(v1->id->ln, var->name);
-				exit(0);
+				exit(1);
 
 			} else if (var->is_initialized == 0) {
 				__err_uninit_var(v1->id->ln, var->name);
@@ -140,7 +130,7 @@ struct OutputCode *process_expression(struct Expression *e) {
 
 			if (var == NULL) {
 				__err_undecl_var(v1->id->ln, var->name);
-				exit(0);
+				exit(1);
 
 			} else if (var->is_initialized == 0) {
 				__err_uninit_var(v1->id->ln, var->name);
@@ -154,7 +144,7 @@ struct OutputCode *process_expression(struct Expression *e) {
 
 			if (var == NULL) {
 				__err_undecl_var(v2->id->ln, var->name);
-				exit(0);
+				exit(1);
 
 			} else if (var->is_initialized == 0) {
 				__err_uninit_var(v2->id->ln, var->name);
@@ -272,7 +262,6 @@ struct OutputCode *process_expression(struct Expression *e) {
 			} else if (strcmp(v1->type, "id") == 0 && strcmp(v2->type, "num") == 0) {
 				/*
 				ok
-				TODO: kosztowne, nielogarytmiczne, ale działa
 				id * 10
 				*/
 				double l = log2(v2->num);
@@ -280,7 +269,7 @@ struct OutputCode *process_expression(struct Expression *e) {
 				if (v2->num == 0) {
 					oc = fill_reg_with_num(0, 1);
 
-				} else if ((l - l/1) == 0) {
+				} /*else if ((l - l/1) == 0) {
 					int it = log2(v2->num);
 
 					oc = id_addr_to_reg(v1->id, 0);
@@ -289,21 +278,50 @@ struct OutputCode *process_expression(struct Expression *e) {
 					for (int i = 1; i <= it; i++) {
 						oc = insert(oc, cmd("SHL", 1));
 					}
-				} else {
 
-					oc = fill_reg_with_num(v2->num, 4);
-					oc = merge(oc, id_addr_to_reg(v1->id, 0));
-					oc = merge(oc, fill_reg_with_num(0, 1));
-					oc = insert(oc, jcmd("JZERO", 4, 4));
-					oc = insert(oc, cmd("ADD", 1));
-					oc = insert(oc, cmd("DEC", 4));
-					oc = insert(oc, jscmd("JUMP", -3));
+				} */else {
+					int num = v2->num;
+					int pos = 0;
+					int was_even = num % 2 == 0? 1 : 0;
+					int times = 0;
+
+					oc = id_addr_to_reg(v1->id, 0);
+					oc = insert(oc, cmd("LOAD", 1));
+					oc = insert(oc, cmd("ZERO", 0));
+					oc = insert(oc, cmd("STORE", 1));
+					oc = insert(oc, cmd("INC", 0));
+					oc = insert(oc, cmd("STORE", 1));
+					oc = insert(oc, cmd("DEC", 0));
+
+					while (num > 0) {
+						num = num >> 1;
+						pos++;
+
+						if (num % 2 == 1) {
+							for (int i = 1; i <= pos; i++) {
+								oc = insert(oc, cmd("SHL", 1));
+							}
+
+							oc = insert(oc, cmd("INC", 0));
+
+							if (times > 0 || was_even == 0) {
+								oc = insert(oc, cmd("ADD", 1));
+							}
+
+							times = 1;
+
+							if (num > 1) {
+								oc = insert(oc, cmd("STORE", 1));
+								oc = insert(oc, cmd("DEC", 0));
+								oc = insert(oc, cmd("LOAD", 1));
+							}
+						}
+					}
 				}
 
 			} else {
 				/*
 				ok
-				TODO: kosztowne, nielogarytmiczne, ale działa
 				10 * id
 				*/
 				double l = log2(v2->num);
@@ -311,7 +329,7 @@ struct OutputCode *process_expression(struct Expression *e) {
 				if (v1->num == 0) {
 					oc = fill_reg_with_num(0, 1);
 
-				} else if ((l - l/1) == 0) {
+				} /*else if ((l - l/1) == 0) {
 					int it = log2(v1->num);
 
 					oc = id_addr_to_reg(v2->id, 0);
@@ -320,15 +338,49 @@ struct OutputCode *process_expression(struct Expression *e) {
 					for (int i = 1; i <= it; i++) {
 						oc = insert(oc, cmd("SHL", 1));
 					}
-				} else {
+				} */else {
 
-					oc = fill_reg_with_num(v1->num, 4);
-					oc = merge(oc, id_addr_to_reg(v2->id, 0));
-					oc = merge(oc, fill_reg_with_num(0, 1));
-					oc = insert(oc, jcmd("JZERO", 4, 4));
-					oc = insert(oc, cmd("ADD", 1));
-					oc = insert(oc, cmd("DEC", 4));
-					oc = insert(oc, jscmd("JUMP", -3));
+					int num = v1->num;
+					int pos = 0;
+					int was_even = num % 2 == 0? 1 : 0;
+					int times = 0;
+
+					oc = id_addr_to_reg(v2->id, 0);
+					oc = insert(oc, cmd("LOAD", 1));
+					oc = insert(oc, cmd("ZERO", 0));
+					oc = insert(oc, cmd("STORE", 1));
+					oc = insert(oc, cmd("INC", 0));
+					oc = insert(oc, cmd("STORE", 1));
+					oc = insert(oc, cmd("DEC", 0));
+
+					// if (num % 2 == 0) {
+					// 	oc = insert(oc, cmd("ZERO", 1));
+					// }
+
+					while (num > 0) {
+						num = num >> 1;
+						pos++;
+
+						if (num % 2 == 1) {
+							for (int i = 1; i <= pos; i++) {
+								oc = insert(oc, cmd("SHL", 1));
+							}
+
+							oc = insert(oc, cmd("INC", 0));
+
+							if (times > 0 || was_even == 0) {
+								oc = insert(oc, cmd("ADD", 1));
+							}
+
+							times = 1;
+
+							if (num > 1) {
+								oc = insert(oc, cmd("STORE", 1));
+								oc = insert(oc, cmd("DEC", 0));
+								oc = insert(oc, cmd("LOAD", 1));
+							}
+						}
+					}
 				}
 			}
 
@@ -377,18 +429,41 @@ struct OutputCode *process_expression(struct Expression *e) {
 					oc = fill_reg_with_num(0, 1);
 
 				} else {
-					oc = fill_reg_with_num(v1->num, 4);
-					oc = merge(oc, id_addr_to_reg(v2->id, 0));
+					int num = v1->num;
+					int pos = 0;
+
+					oc = id_addr_to_reg(v2->id, 0);
 					oc = insert(oc, cmd("LOAD", 1));
-					oc = insert(oc, jcmd("JZERO", 1, 8));
-					oc = insert(oc, cmd("ZERO", 1));
-					oc = insert(oc, cmd("INC", 4));
-					oc = insert(oc, jcmd("JZERO", 4, 4));
-					oc = insert(oc, cmd("SUB", 4));
-					oc = insert(oc, cmd("INC", 1));
-					oc = insert(oc, jscmd("JUMP", -3));
-					oc = insert(oc, cmd("DEC", 1));
+					oc = insert(oc, cmd("ZERO", 0));
+					oc = insert(oc, cmd("STORE", 1));
+					oc = insert(oc, cmd("INC", 0));
+					oc = insert(oc, cmd("STORE", 1));
+					oc = insert(oc, cmd("DEC", 0));
+
+					while (num > 0) {
+						num = num >> 1;
+						pos++;
+
+						if (num % 2 == 1) {
+							for (int i = 1; i <= pos; i++) {
+								oc = insert(oc, cmd("SHR", 1));
+							}
+
+							oc = insert(oc, cmd("INC", 0));
+							oc = insert(oc, cmd("LOAD", 4));
+							oc = insert(oc, cmd("STORE", 1));
+							oc = insert(oc, cmd("SUB", 4));
+							oc = insert(oc, cmd("STORE", 4));
+
+							if (num > 1) {
+								oc = insert(oc, cmd("DEC", 0));
+								oc = insert(oc, cmd("LOAD", 1));
+							}
+						}
+					}
 				}
+
+
 			} else {
 				/*
 				ok
@@ -450,6 +525,139 @@ struct OutputCode *process_expression(struct Expression *e) {
 
 				oc = fill_reg_with_num(val, 1);
 
+			} else if (strcmp(v1->type, "id") == 0 && strcmp(v2->type, "id") == 0) {
+				/*
+				ok
+				a % b
+				*/
+				oc = id_addr_to_reg(v2->id, 4);
+				oc = insert(oc, cmd("COPY", 4));
+				oc = insert(oc, cmd("LOAD", 1));
+				oc = insert(oc, cmd("ZERO", 0));
+				oc = insert(oc, cmd("STORE", 4));
+
+				struct OutputCode *oc2 = id_addr_to_reg(v1->id, 0);
+				int oc2_len = oc2->cmd_tree_size;
+
+				oc = insert(oc, jcmd("JZERO", 1, 24 + oc2_len));
+				oc = merge(oc, oc2);
+				oc = insert(oc, cmd("LOAD", 1));
+				oc = insert(oc, cmd("LOAD", 4));
+				oc = insert(oc, cmd("ZERO", 0));
+				oc = insert(oc, cmd("LOAD", 0));
+				oc = insert(oc, jcmd("JZERO", 4, 5));
+				oc = insert(oc, cmd("SUB", 4));
+				oc = insert(oc, jcmd("JZERO", 4, 3));
+				oc = insert(oc, cmd("SUB", 1));
+				oc = insert(oc, jscmd("JUMP", -4));
+
+				oc = insert(oc, cmd("ZERO", 0));
+				oc = insert(oc, cmd("INC", 0));
+				oc = insert(oc, cmd("STORE", 1));
+				oc = insert(oc, cmd("INC", 1));
+				oc = insert(oc, cmd("ZERO", 0));
+				oc = insert(oc, cmd("LOAD", 0));
+				oc = insert(oc, cmd("SUB", 1));
+				oc = insert(oc, jcmd("JZERO", 1, 3));
+				oc = insert(oc, cmd("ZERO", 1));
+				oc = insert(oc, jscmd("JUMP", 4));
+				oc = insert(oc, cmd("ZERO", 0));
+				oc = insert(oc, cmd("INC", 0));
+				oc = insert(oc, cmd("LOAD", 1));
+			} else if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "id") == 0) {
+				/*
+				ok
+				11 % a
+				*/
+				if (v1->num == 0) {
+					oc = fill_reg_with_num(0, 1);
+
+				} else {
+					oc = id_addr_to_reg(v2->id, 4);
+					oc = insert(oc, cmd("COPY", 4));
+					oc = insert(oc, cmd("LOAD", 1));
+					oc = insert(oc, cmd("ZERO", 0));
+					oc = insert(oc, cmd("STORE", 4));
+
+					struct OutputCode *oc2 = fill_reg_with_num(v1->num, 1);
+					oc2 = merge(oc2, fill_reg_with_num(v1->num, 4));
+					int oc2_len = oc2->cmd_tree_size;
+
+					oc = insert(oc, jcmd("JZERO", 1, 21 + oc2_len));
+					oc = merge(oc, oc2);
+					oc = insert(oc, cmd("ZERO", 0));
+					oc = insert(oc, cmd("LOAD", 0));
+					oc = insert(oc, jcmd("JZERO", 4, 5));
+					oc = insert(oc, cmd("SUB", 4));
+					oc = insert(oc, jcmd("JZERO", 4, 3));
+					oc = insert(oc, cmd("SUB", 1));
+					oc = insert(oc, jscmd("JUMP", -4));
+
+					oc = insert(oc, cmd("ZERO", 0));
+					oc = insert(oc, cmd("INC", 0));
+					oc = insert(oc, cmd("STORE", 1));
+					oc = insert(oc, cmd("INC", 1));
+					oc = insert(oc, cmd("ZERO", 0));
+					oc = insert(oc, cmd("LOAD", 0));
+					oc = insert(oc, cmd("SUB", 1));
+					oc = insert(oc, jcmd("JZERO", 1, 3));
+					oc = insert(oc, cmd("ZERO", 1));
+					oc = insert(oc, jscmd("JUMP", 4));
+					oc = insert(oc, cmd("ZERO", 0));
+					oc = insert(oc, cmd("INC", 0));
+					oc = insert(oc, cmd("LOAD", 1));
+
+				}
+			} else {
+				/*
+				ok
+				a % 11
+				*/
+				if (v2->num == 0) {
+					oc = fill_reg_with_num(0, 1);
+
+				} else {
+					oc = fill_reg_with_num(v2->num, 1);
+					//oc = insert(oc, cmd("COPY", 4));
+					//oc = insert(oc, cmd("LOAD", 1));
+					oc = insert(oc, cmd("ZERO", 0));
+					oc = insert(oc, cmd("STORE", 1));
+					// oc = id_addr_to_reg(v2->id, 4);
+					// oc = insert(oc, cmd("COPY", 4));
+					// oc = insert(oc, cmd("LOAD", 1));
+					// oc = insert(oc, cmd("ZERO", 0));
+					// oc = insert(oc, cmd("STORE", 4));
+
+					struct OutputCode *oc2 = id_addr_to_reg(v1->id, 0);
+					int oc2_len = oc2->cmd_tree_size;
+
+					oc = insert(oc, jcmd("JZERO", 1, 24 - 2 + oc2_len));
+					oc = merge(oc, oc2);
+					oc = insert(oc, cmd("LOAD", 1));
+					oc = insert(oc, cmd("LOAD", 4));
+					oc = insert(oc, cmd("ZERO", 0));
+					//oc = insert(oc, cmd("LOAD", 0));
+					oc = insert(oc, jcmd("JZERO", 4, 5));
+					oc = insert(oc, cmd("SUB", 4));
+					oc = insert(oc, jcmd("JZERO", 4, 3));
+					oc = insert(oc, cmd("SUB", 1));
+					oc = insert(oc, jscmd("JUMP", -4));
+
+					oc = insert(oc, cmd("ZERO", 0));
+					oc = insert(oc, cmd("INC", 0));
+					oc = insert(oc, cmd("STORE", 1));
+					oc = insert(oc, cmd("INC", 1));
+					oc = insert(oc, cmd("ZERO", 0));
+					//oc = insert(oc, cmd("LOAD", 0));
+					oc = insert(oc, cmd("SUB", 1));
+					oc = insert(oc, jcmd("JZERO", 1, 3));
+					oc = insert(oc, cmd("ZERO", 1));
+					oc = insert(oc, jscmd("JUMP", 4));
+					oc = insert(oc, cmd("ZERO", 0));
+					oc = insert(oc, cmd("INC", 0));
+					oc = insert(oc, cmd("LOAD", 1));
+
+				}
 			}
 		}
 	}
@@ -470,7 +678,7 @@ struct OutputCode *process_condition(struct Condition *c) {
 
 		if (var == NULL) {
 			__err_undecl_var(v1->id->ln, var->name);
-			exit(0);
+			exit(1);
 
 		} else if (var->is_initialized == 0) {
 			__err_uninit_var(v1->id->ln, var->name);
@@ -484,7 +692,7 @@ struct OutputCode *process_condition(struct Condition *c) {
 
 		if (var == NULL) {
 			__err_undecl_var(v2->id->ln, var->name);
-			exit(0);
+			exit(1);
 
 		} else if (var->is_initialized == 0) {
 			__err_uninit_var(v2->id->ln, var->name);
@@ -868,7 +1076,7 @@ struct OutputCode *command_gen(struct Command *c) {
 
 		if (var == NULL) {
 			__err_undecl_var(c->id->ln, c->id->name);
-			exit(0);
+			exit(1);
 		} else if (var->is_mutable == 0) {
 			__err_not_mut(c->id->ln, c->id->name);
 
@@ -889,7 +1097,7 @@ struct OutputCode *command_gen(struct Command *c) {
 
 			if (var == NULL) {
 				__err_undecl_var(c->val1->id->ln, c->val1->id->name);
-				exit(0);
+				exit(1);
 			} else if (var->is_initialized == 0) {
 				__err_uninit_var(c->val1->id->ln, var->name);
 			}
@@ -912,7 +1120,7 @@ struct OutputCode *command_gen(struct Command *c) {
 		var = __get_var(c->id->name);
 		if (var == NULL) {
 			__err_undecl_var(c->id->ln, c->id->name);
-			exit(0);
+			exit(1);
 
 		} else if (var->is_mutable == 0) {
 			__err_not_mut(c->id->ln, c->id->name);
@@ -993,15 +1201,39 @@ struct OutputCode *command_gen(struct Command *c) {
 		__unset_var(loop_id);
 
 	} else if (strcmp(c->type, "for") == 0) {
+		struct Var *var;
 		struct Value *v1, *v2;
 		struct OutputCode *oc2;
 		char reg_cpy[16];
 
+		v1 = c->val1;
+		v2 = c->val2;
+
+		if (strcmp(v1->type, "id") == 0) {
+			var = __get_var(v1->id->name);
+			if (var == NULL) {
+				__err_undecl_var(v1->id->ln, var->name);
+				//exit(1);
+			} else if (var->is_initialized == 0) {
+				__err_uninit_var(v1->id->ln, var->name);
+				//return oc;
+			}
+		}
+
+		if (strcmp(v2->type, "id") == 0) {
+			var = __get_var(v2->id->name);
+			if (var == NULL) {
+				__err_undecl_var(v2->id->ln, var->name);
+				//exit(1);
+			} else if (var->is_initialized == 0) {
+				__err_uninit_var(v2->id->ln, var->name);
+				//return oc;
+			}
+		}
+
 		__declare_var(c->pid, 0, 0, "num");
 		__set_var_init(c->pid);
 
-		v1 = c->val1;
-		v2 = c->val2;
 		sprintf(reg_cpy, "_for_%s", c->pid);
 
 		__declare_var(reg_cpy, 0, 0, "num");
@@ -1024,7 +1256,7 @@ struct OutputCode *command_gen(struct Command *c) {
 		} else if (strcmp(v1->type, "id") == 0 && strcmp(v2->type, "id") == 0) {
 			/*
 			ok
-			FROM 3 TO 11
+			FROM a TO b
 			*/
 			oc = id_addr_to_reg(v2->id, 0);
 			oc = insert(oc, cmd("LOAD", 2));
@@ -1084,15 +1316,39 @@ struct OutputCode *command_gen(struct Command *c) {
 		__unset_var(c->pid);
 
 	} else if (strcmp(c->type, "for-downto") == 0) {
+		struct Var *var;
 		struct Value *v1, *v2;
 		struct OutputCode *oc2;
 		char reg_cpy[16];
 
+		v1 = c->val1;
+		v2 = c->val2;
+
+		if (strcmp(v1->type, "id") == 0) {
+			var = __get_var(v1->id->name);
+			if (var == NULL) {
+				__err_undecl_var(v1->id->ln, var->name);
+				//exit(1);
+			} else if (var->is_initialized == 0) {
+				__err_uninit_var(v1->id->ln, var->name);
+				//return oc;
+			}
+		}
+
+		if (strcmp(v2->type, "id") == 0) {
+			var = __get_var(v2->id->name);
+			if (var == NULL) {
+				__err_undecl_var(v2->id->ln, var->name);
+				//exit(1);
+			} else if (var->is_initialized == 0) {
+				__err_uninit_var(v2->id->ln, var->name);
+				//return oc;
+			}
+		}
+
 		__declare_var(c->pid, 0, 0, "num");
 		__set_var_init(c->pid);
 
-		v1 = c->val1;
-		v2 = c->val2;
 		sprintf(reg_cpy, "_for_%s", c->pid);
 
 		__declare_var(reg_cpy, 0, 0, "num");

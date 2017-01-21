@@ -146,6 +146,12 @@ int main(int argc, char *argv[]) {
 		printf("Użycie: ./compiler OUTPUT_FILENAME < INPUT_FILENAME\n");
 	} else {
 		output_file = argv[1];
+
+		__declare_var("_md0", 0, 1, "num");
+		__declare_var("_md1", 0, 1, "num");
+		__declare_var("_md2", 0, 1, "num");
+		//__print_memory();
+
 		yyparse ();
 	}
 	return 0;

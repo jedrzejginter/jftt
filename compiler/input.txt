@@ -1,25 +1,9 @@
-{ Rozklad liczby na czynniki pierwsze }
 VAR
-	a n m
+	a c d
 BEGIN
-	n := 20;
-	m := 0;
-	a :=2 % 0;
-	a :=2 % 0;
-	a :=2 % 0;
-	a :=2 % 0;
-	a :=2 % 0;
-	a :=2 % 0;
-	a :=2 % 0;
-	a :=2 % 0;
-	a :=2 % 0;
-	a :=2 % 0;
-	a :=2 % 0;
-	a :=2 % 0;
-	a :=2 % 0;
-	a :=2 % 0;
-	a :=2 % 0;
-	a :=2 % 0;
-	WRITE a;
-
+	READ a;
+	c := a * 3;
+	d := 3 * a;
+	WRITE c;
+	WRITE d;
 END

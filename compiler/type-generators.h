@@ -9,26 +9,18 @@ struct Declaration *__Declaration(char *name, int size) {
 }
 
 struct Declarations *__Declarations(struct Declarations *current, struct Declaration *d) {
-	printf("-1- \n");
 	if (current == NULL) {
 		current = malloc(sizeof(struct Declarations));
 	}
-	printf("-2- \n");
 
 	if (current->root == NULL) {
-		printf("-2a-pre- \n");
 		current->root = d;
 		current->last = d;
-		printf("-2a- \n");
 
 	} else if (d != NULL) {
-		printf("-2b-pre- \n");
 		current->last->next = d;
 		current->last = d;
-		printf("-2b- \n");
 	}
-
-	printf("-3- \n");
 
 	return current;
 }

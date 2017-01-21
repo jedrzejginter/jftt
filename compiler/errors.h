@@ -61,6 +61,11 @@ void __err_bad_array_init(int line, char *var_name) {
 	print_err(line, buf);
 }
 
+void __err_bad_array_ix(int line, int index, char *var_name) {
+	sprintf(buf, "Indeks `%d` poza zakresem tablicy `%s`", index, var_name);
+	print_err(line, buf);
+}
+
 void __err_dup_decl(int line, char *var_name) {
 	sprintf(buf, "Próba ponownej deklaracji zmiennej `%s`", var_name);
 	print_err(line, buf);
