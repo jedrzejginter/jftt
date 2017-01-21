@@ -38,7 +38,7 @@ struct RMLine *cmd(char *, int);
 struct RMLine *jcmd(char *, int, int);
 struct RMLine *jscmd(char *, int);
 struct OutputCode *insert(struct OutputCode *, struct RMLine *);
-void print_line(char *);
+void print_line(FILE *, char *);
 
 // void add_sym(Sym *s) {
 // 	if (symlist == NULL) {
@@ -296,13 +296,14 @@ struct OutputCode *load_num_to_register(int num, int reg) {
 	return f;
 }
 
-void print_line(char *l) {
-	printf("%s\n", l);
+void print_line(FILE *fp, char *l) {
+	fprintf(fp, "%s\n", l);
 	RM_LINE += 1;
 }
 
-void print_cmd_tree(struct OutputCode *f, int reg) {
+void print_cmd_tree(char *output_file, struct OutputCode *f, int reg) {
 	char buf[128];
+	FILE *fp = fopen(output_file, "w");
 
 	for (int i = 0; i < f->cmd_tree_size; i++) {
 		int r = reg;
@@ -321,8 +322,9 @@ void print_cmd_tree(struct OutputCode *f, int reg) {
 			sprintf(buf, "%s %d", f->cmd_tree[i]->cmd, r);
 		}
 
-		print_line(buf);
+		print_line(fp, buf);
 	}
 
-	print_line("HALT");
+	print_line(fp, "HALT");
+	fclose(fp);
 }

@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <stdlib.h>
+
 struct Sym {
 	struct Sym *prev;
 	char *name;
@@ -304,6 +307,7 @@ void print_line(char *l) {
 
 void print_cmd_tree(struct Foobar *f, int reg) {
 	char buf[128];
+	FILE *fp = fopen("first.imp", "w");
 
 	for (int i = 0; i < f->cmd_tree_size; i++) {
 		int r = reg;
@@ -322,8 +326,12 @@ void print_cmd_tree(struct Foobar *f, int reg) {
 			sprintf(buf, "%s %d\n", f->cmd_tree[i]->cmd, r);
 		}
 
-		print_line(buf);
+		//print_line(buf);
+		fprintf(fp, "%s", buf);
+		RM_LINE++;
 	}
+
+	fclose(fp);
 }
 
 

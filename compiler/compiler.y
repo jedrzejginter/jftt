@@ -12,6 +12,9 @@
 int yylex(void);
 void yyerror(char *);
 
+char *input_file;
+char *output_file;
+
 %}
 %union {
 	int num;
@@ -32,7 +35,7 @@ void yyerror(char *);
 %token T_EQ T_NE T_LT T_GT T_LE T_GE
 %token T_ASSGNOP
 %token T_NEWLINE T_SEMICOLON T_OP_BRACKET T_CL_BRACKET
-%token <num> T_NUM
+%token <num> T_NUM T_ADD T_SUB T_MULT T_DIV T_MOD
 %token <var> T_PIDENTIFIER
 %type <id> identifier
 %type <val> value
@@ -45,16 +48,17 @@ void yyerror(char *);
 
 %%
 program : T_VAR vdeclarations T_BEG commands T_END {
-
-	if (ERRORS > 0) {
-		exit(0);
-	} else {
-		struct OutputCode *oc = code_gen($4);
-
 		if (ERRORS > 0) {
 			exit(0);
 		} else {
-			print_cmd_tree(oc, 0); }
+			struct OutputCode *oc = code_gen($4);
+
+			if (ERRORS > 0) {
+				exit(0);
+			} else {
+				print_cmd_tree(output_file, oc, 0);
+				print_compil_succ();
+			}
 		}
 	}
 ;
@@ -112,11 +116,11 @@ command : identifier T_ASSGNOP expression T_SEMICOLON {
 ;
 
 expression : value 		{ $$ = __Expression($1, NULL, NULL); }
-	| value '+' value		{ $$ = __Expression($1, $3, "+"); }
-	| value '-' value		{ $$ = __Expression($1, $3, "-"); }
-	| value '*' value		{ $$ = __Expression($1, $3, "*"); }
-	| value '/' value		{ $$ = __Expression($1, $3, "/"); }
-	| value '%' value		{ $$ = __Expression($1, $3, "%"); }
+	| value T_ADD value		{ $$ = __Expression($1, $3, "+"); }
+	| value T_SUB value		{ $$ = __Expression($1, $3, "-"); }
+	| value T_MULT value		{ $$ = __Expression($1, $3, "*"); }
+	| value T_DIV value		{ $$ = __Expression($1, $3, "/"); }
+	| value T_MOD value		{ $$ = __Expression($1, $3, "%"); }
 ;
 
 condition : value T_EQ value 	{ $$ = __Condition($1, $3, "="); }
@@ -138,7 +142,12 @@ identifier : T_PIDENTIFIER 											{ $$ = __Id($1, 0, NULL);	$$->ln = PR_LINE
 
 %%
 int main(int argc, char *argv[]) {
-	yyparse ();
+	if (argc < 2) {
+		printf("Użycie: ./compiler OUTPUT_FILENAME < INPUT_FILENAME\n");
+	} else {
+		output_file = argv[1];
+		yyparse ();
+	}
 	return 0;
 }
 

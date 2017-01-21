@@ -4,6 +4,7 @@
 int yywrap(void);
 void yyerror(char *);
 void register_new_line(void);
+void __err_unknown_str(int, char *);
 
 int cmt = 0;
 
@@ -26,6 +27,11 @@ ID [_a-z]+
 ">="			{ if (cmt == 0) { return(T_GE); } }
 ">"			{ if (cmt == 0) { return(T_GT); } }
 "="			{ if (cmt == 0) { return(T_EQ); } }
+"-"			{ if (cmt == 0) { return(T_SUB); } }
+"+"			{ if (cmt == 0) { return(T_ADD); } }
+"*"			{ if (cmt == 0) { return(T_MULT); } }
+"/"			{ if (cmt == 0) { return(T_DIV); } }
+"%"			{ if (cmt == 0) { return(T_MOD); } }
 "VAR"			{ if (cmt == 0) { return(T_VAR); } }
 "BEGIN"		{ if (cmt == 0) { return(T_BEG); } }
 "THEN"		{ if (cmt == 0) { return(T_THEN); } }
@@ -50,7 +56,7 @@ ID [_a-z]+
 \n				{ register_new_line(); }
 [ \t]+		{ }
 "}"			{ if (cmt == 1) { cmt = 0; } }
-.				{ if (cmt == 0) { return(yytext[0]); } }
+.				{ if (cmt == 0) { __err_unknown_str(0, yytext); exit(0); return(yytext[0]); } }
 %%
 
 int yywrap(void) {

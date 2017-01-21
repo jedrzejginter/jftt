@@ -7,25 +7,26 @@ void register_new_line() {
 	PR_LINE++;
 }
 
-void register_error() {
-	ERRORS++;
-	printf("\033[31;1m%s\033[0m occured\n", "Error");
+void print_compil_succ() {
+	printf("\n\t\033[0;32mKompilacja zakończona pomyślnie\033[0m\n");
+	printf("\tBłędów\r\t\t\t%d\n", ERRORS);
+	printf("\tOstrzeżeń\r\t\t\t%d\n\n", WARNINGS);
 }
 
 void print_err(int line, char *message) {
 	char *fmt;
 
 	if (line < 0) {
-		printf("\r\t\033[31;1mBłąd:\033[0m %s\n", message);
+		printf("\r\t\033[0;31mBłąd\r\t\t\t\033[0m%s\n", message);
 	} else {
-		printf("%d\r\t\033[31;1mBłąd:\033[0m %s\n", line, message);
+		printf("%d\r\t\033[0;31mBłąd\r\t\t\t\033[0m%s\n", line, message);
 	}
 
 	ERRORS++;
 }
 
 void print_warn(int line, char *message) {
-	printf("%d\r\t\033[33;1mOstrzeżenie:\033[0m %s\n", line, message);
+	printf("%d\r\t\033[0;33mOstrzeżenie\r\t\t\t\033[0m%s\n", line, message);
 	WARNINGS++;
 }
 
@@ -48,6 +49,11 @@ void __err_bad_syntax() {
 	sprintf(buf, "Niepoprawna składnia");
 	print_err(-1, buf);
 	exit(0);
+}
+
+void __err_unknown_str(int line, char *str) {
+	sprintf(buf, "Niepoprawny napis: `%s`", str);
+	print_err(line, buf);
 }
 
 void __err_bad_array_init(int line, char *var_name) {

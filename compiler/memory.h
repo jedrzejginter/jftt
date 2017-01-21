@@ -3,6 +3,7 @@ struct Var {
 	char *type;
 	int size;
 	int memory_index;
+	int value;
 	int is_mutable;		// czy można przypisać do zmiennej?
 	int is_initialized;	// czy zmienna zainicjalizowana? 0 false, 1 true
 	int is_definite;		// czy znamy wartość? 0 false, 1 true
@@ -70,7 +71,19 @@ void __unset_var(char *name) {
 }
 
 void __set_var_init(char *name) {
-	__get_var(name)->is_initialized = 1;
+	struct Var *v = __get_var(name);
+
+	if (v != NULL) {
+		v->is_initialized = 1;
+	}
+}
+
+void __set_var_undef(char *name) {
+	struct Var *v = __get_var(name);
+
+	if (v != NULL) {
+		v->is_definite = 0;
+	}
 }
 
 void __print_memory() {

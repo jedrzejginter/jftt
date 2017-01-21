@@ -1,10 +1,17 @@
 #include <math.h>
 
-struct NumAsBinary {
-	int bin[1024];
-	int size;
+struct Register {
+	int is_definite;
+	int value;
 };
 
+struct Registers {
+	struct Register *reg[5];
+};
+
+struct Registers *R;
+
+void __copy_reg_def(int, int);
 struct OutputCode *fill_reg_with_num(int num, int reg);
 struct OutputCode *id_addr_to_reg(struct Id *, int);
 struct OutputCode *new_output_code();
@@ -12,22 +19,28 @@ struct OutputCode *code_gen(struct Commands *);
 
 int while_loop_id_cnt = 0;
 
-struct OutputCode *value_to_reg(struct Value *v, int reg) {
-	struct OutputCode *oc;
+// struct OutputCode *value_to_reg(struct Value *v, int reg) {
+// 	struct OutputCode *oc;
+//
+// 	if (strcmp(v->type, "num") == 0) {
+// 		oc = fill_reg_with_num(v->num, 1);
+//
+// 	} else {
+// 		oc = id_addr_to_reg(v->id, 0);
+// 		oc = insert(oc, cmd("LOAD", 1));
+//
+// 	}
+//
+// 	return oc;
+// }
 
-	if (strcmp(v->type, "num") == 0) {
-		oc = fill_reg_with_num(v->num, 1);
-
-	} else {
-		oc = id_addr_to_reg(v->id, 0);
-		oc = insert(oc, cmd("LOAD", 1));
-
-	}
-
-	return oc;
+void __set_reg_def(int reg, struct Var *v) {
+	R->reg[reg]->is_definite = v->is_definite;
+	R->reg[reg]->value = (v->is_definite == 1)? v->value : 0;
 }
 
 struct OutputCode *id_addr_to_reg(struct Id *id, int reg) {
+	struct OutputCode *oc = new_output_code();
 	struct Var *v = __get_var(id->name);
 
 	if (strcmp(id->type, "arr") == 0) {
@@ -40,11 +53,25 @@ struct OutputCode *id_addr_to_reg(struct Id *id, int reg) {
 		if (id->index_id != NULL) {
 			// tab[var]
 			struct Var *vv = __get_var(id->index_id);
-			struct OutputCode *oc = fill_reg_with_num(v->memory_index, 4);
-			oc = merge(oc, fill_reg_with_num(vv->memory_index, 0));
-			oc = insert(oc, cmd("ADD", 4));
-			oc = insert(oc, cmd("COPY", 4));
-			return oc;
+
+			if (vv == NULL) {
+				__err_undecl_var(id->ln, id->index_id);
+				return oc;
+			} else if (vv->is_initialized == 0) {
+				__err_uninit_var(id->ln, vv->name);
+				return oc;
+
+			} else {
+
+				oc = fill_reg_with_num(v->memory_index, 4);
+				oc = merge(oc, fill_reg_with_num(vv->memory_index, 0));
+				oc = insert(oc, cmd("ADD", 4));
+				__set_reg_def(4, vv);
+				oc = insert(oc, cmd("COPY", 4));
+				__copy_reg_def(4, 0);
+				return oc;
+			}
+
 		} else {
 			// tab[192]
 			return fill_reg_with_num(v->memory_index + id->index_num, 0);
@@ -59,6 +86,16 @@ struct OutputCode *id_addr_to_reg(struct Id *id, int reg) {
 
 		return fill_reg_with_num(v->memory_index, 0);
 	}
+}
+
+void __set_reg_undef(int reg) {
+	R->reg[reg]->is_definite = 0;
+	R->reg[reg]->value = 0;
+}
+
+void __copy_reg_def(int from_reg, int to_reg) {
+	R->reg[to_reg]->is_definite = R->reg[from_reg]->is_definite;
+	R->reg[to_reg]->value = R->reg[from_reg]->value;
 }
 
 struct OutputCode *process_expression(struct Expression *e) {
@@ -361,7 +398,7 @@ struct OutputCode *process_expression(struct Expression *e) {
 
 				if (v2->num == 0) {
 					oc = fill_reg_with_num(0, 1);
-					__warn_div_0(PR_LINE);
+					__warn_div_0(v2->ln);
 
 				} else if ((l - l/1) == 0) {
 					int it = log2(v2->num);
@@ -395,7 +432,21 @@ struct OutputCode *process_expression(struct Expression *e) {
 
 		} else if (strcmp(e->op, "%") == 0) {
 			if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "num") == 0) {
-				val = v1->num % v2->num;
+				/*
+				ok
+				11 % 2
+				*/
+				int val;
+
+				if (v2->num == 0) {
+					val = 0;
+					__warn_div_0(v2->ln);
+
+				} else {
+					val = v1->num % v2->num;
+				}
+
+				val = val < 0? 0 : val;
 
 				oc = fill_reg_with_num(val, 1);
 
@@ -823,10 +874,12 @@ struct OutputCode *command_gen(struct Command *c) {
 
 		} else {
 
+			__set_var_init(c->id->name);
+			__set_var_undef(c->id->name);
 			oc = merge(oc, id_addr_to_reg(c->id, 0));
 			oc = insert(oc, cmd("GET", 1));
+			__set_reg_undef(1);
 			oc = insert(oc, cmd("STORE", 1));
-			__set_var_init(c->id->name);
 		}
 
 	} else if (strcmp(c->type, "write") == 0) {
@@ -840,9 +893,15 @@ struct OutputCode *command_gen(struct Command *c) {
 			} else if (var->is_initialized == 0) {
 				__err_uninit_var(c->val1->id->ln, var->name);
 			}
+
+			oc = id_addr_to_reg(c->val1->id, 0);
+			oc = insert(oc, cmd("LOAD", 1));
+			//TODO reg def
+		} else {
+
+			oc = fill_reg_with_num(c->val1->num, 1);
 		}
 
-		oc = merge(oc, value_to_reg(c->val1, 1));
 		oc = insert(oc, cmd("PUT", 1));
 
 	} else if (strcmp(c->type, "skip") == 0) {
@@ -860,10 +919,10 @@ struct OutputCode *command_gen(struct Command *c) {
 
 		} else {
 
+			__set_var_init(c->id->name);
 			oc = merge(oc, process_expression(c->expr));
 			oc = merge(oc, id_addr_to_reg(c->id, 0));
 			oc = insert(oc, cmd("STORE", 1));
-			__set_var_init(c->id->name);
 		}
 
 	} else if (strcmp(c->type, "if") == 0) {
@@ -877,15 +936,10 @@ struct OutputCode *command_gen(struct Command *c) {
 		cmd1 = c->cmd1;
 		cmd2 = c->cmd2;
 
-		// if (oc_cond->swap_blocks == 1) {
-		// 	cmd1 = c->cmd2;
-		// 	cmd2 = c->cmd1;
-		// }
-
 		oc_cmd1 = code_gen(cmd1);
 		oc_cmd2 = code_gen(cmd2);
 
-		int raw_ln = oc_cmd1->cmd_tree_size + 2;
+		int raw_ln = oc_cmd1->cmd_tree_size + 1;
 		int ln = raw_ln + oc->add_cmd_tree_size + 1;
 
 		oc = insert(oc, jcmd("JZERO", 1, ln));
@@ -910,11 +964,12 @@ struct OutputCode *command_gen(struct Command *c) {
 		struct Id *lid = __Id(loop_id, 0, NULL);
 
 		__declare_var(loop_id, 0, 0, "num");
+		__set_var_init(loop_id);
 
 		oc_cond = process_condition(c->cond);
 		oc_cmd = code_gen(c->cmd1);
 
-		int end_jump_ln = oc_cond->cmd_tree_size;
+		int cond_size = oc_cond->cmd_tree_size;
 
 		oc = reg_overwrite(oc_cond, 1, 3);
 
@@ -926,18 +981,14 @@ struct OutputCode *command_gen(struct Command *c) {
 		oc2 = insert(oc2, cmd("DEC", 3));
 		oc2 = insert(oc2, cmd("STORE", 3));
 
+		int cmd_size = oc2->cmd_tree_size;
+
 		int jumps = 1;
-		// if (oc_cond->swap_blocks == 1) {
-		// 	oc = insert(oc, jcmd("JZERO", 3, 2));
-		// 	oc = insert(oc, jscmd("JUMP", oc2->cmd_tree_size + 2));
-		// 	jumps = 2;
-		//
-		// } else {
+
 		oc = insert(oc, jcmd("JZERO", 3, oc2->cmd_tree_size + 2));
-		//}
 
 		oc = merge(oc, oc2);
-		oc = insert(oc, jscmd("JUMP", -end_jump_ln - oc2->cmd_tree_size + 1 - jumps));
+		oc = insert(oc, jscmd("JUMP", - 1 - cmd_size - cond_size));
 
 		__unset_var(loop_id);
 
@@ -947,12 +998,14 @@ struct OutputCode *command_gen(struct Command *c) {
 		char reg_cpy[16];
 
 		__declare_var(c->pid, 0, 0, "num");
+		__set_var_init(c->pid);
 
 		v1 = c->val1;
 		v2 = c->val2;
 		sprintf(reg_cpy, "_for_%s", c->pid);
 
 		__declare_var(reg_cpy, 0, 0, "num");
+		__set_var_init(reg_cpy);
 
 		struct Id *id = __Id(c->pid, 0, NULL);
 
@@ -1036,12 +1089,14 @@ struct OutputCode *command_gen(struct Command *c) {
 		char reg_cpy[16];
 
 		__declare_var(c->pid, 0, 0, "num");
+		__set_var_init(c->pid);
 
 		v1 = c->val1;
 		v2 = c->val2;
 		sprintf(reg_cpy, "_for_%s", c->pid);
 
 		__declare_var(reg_cpy, 0, 0, "num");
+		__set_var_init(reg_cpy);
 
 		struct Id *id = __Id(c->pid, 0, NULL);
 
@@ -1063,7 +1118,10 @@ struct OutputCode *command_gen(struct Command *c) {
 			FROM a DOWNTO 1
 			*/
 			__declare_var("_tmp0", 0, 0, "num");
+			__set_var_init("_tmp0");
+
 			struct Id *tmp_id = __Id("_tmp0", 0, NULL);
+
 			oc = id_addr_to_reg(v1->id, 0);
 			oc = insert(oc, cmd("LOAD", 2));
 			oc = merge(oc, id_addr_to_reg(v2->id, 0));
@@ -1082,7 +1140,10 @@ struct OutputCode *command_gen(struct Command *c) {
 			FROM a DOWNTO 1
 			*/
 			__declare_var("_tmp0", 0, 0, "num");
+			__set_var_init("_tmp0");
+
 			struct Id *tmp_id = __Id("_tmp0", 0, NULL);
+
 			oc = id_addr_to_reg(v1->id, 0);
 			oc = insert(oc, cmd("LOAD", 2));
 			oc = merge(oc, id_addr_to_reg(id, 0));
@@ -1136,6 +1197,16 @@ struct OutputCode *code_gen(struct Commands *cmds) {
 	struct OutputCode *oc = new_output_code();
 
 	if (cmds != NULL) {
+		R = malloc(sizeof(struct Registers));
+
+		for (int i = 0; i <= 4; i++) {
+			struct Register *reg = malloc(sizeof(struct Register));
+			reg->is_definite = 0;
+			reg->value = 0;
+
+			R->reg[i] = reg;
+		}
+
 		for (int i = 0; i < cmds->cmds_size; i++) {
 			oc = merge(oc, command_gen(cmds->cmds[i]));
 		}
@@ -1179,6 +1250,9 @@ struct OutputCode *fill_reg_with_num(int num, int reg) {
 			}
 		}
 	}
+
+	R->reg[reg]->is_definite = 1;
+	R->reg[reg]->value = org_num;
 
 	return f;
 }

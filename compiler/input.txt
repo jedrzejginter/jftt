@@ -1,12 +1,25 @@
-{ komentarz }
+{ Rozklad liczby na czynniki pierwsze }
 VAR
-	a b[1] bx ax[900]
+	a n m
 BEGIN
-	a := 1;
-	WHILE a > 0 DO
-		SKIP;
-	ENDWHILE
+	n := 20;
+	m := 0;
+	a :=2 % 0;
+	a :=2 % 0;
+	a :=2 % 0;
+	a :=2 % 0;
+	a :=2 % 0;
+	a :=2 % 0;
+	a :=2 % 0;
+	a :=2 % 0;
+	a :=2 % 0;
+	a :=2 % 0;
+	a :=2 % 0;
+	a :=2 % 0;
+	a :=2 % 0;
+	a :=2 % 0;
+	a :=2 % 0;
+	a :=2 % 0;
+	WRITE a;
 
-	READ b[10];
-	WRITE b[10];
 END
