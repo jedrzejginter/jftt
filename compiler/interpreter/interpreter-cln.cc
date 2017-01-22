@@ -4,7 +4,6 @@
  * Autor: Maciek Gębala
  * http://mgc.im.pwr.wroc.pl/
  * 2016-11-14
- * (wersja CLN)
 */
 
 #include<iostream>
@@ -30,7 +29,7 @@ int main(int argc, char* argv[])
     map<cl_I,cl_I> pam;
 
     int reg=5;
-    cl_I r[reg];
+    cl_I r[5];
     int lr;
 
     cl_I k=0;

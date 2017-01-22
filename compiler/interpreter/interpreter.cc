@@ -16,7 +16,10 @@
 #include<cstdlib> 	// rand()
 #include<ctime>
 
+
+
 using namespace std;
+
 
 enum Instructions { GET, PUT, LOAD, STORE, COPY, ADD, SUB, SHR, SHL, INC, DEC, ZERO, JUMP, JZERO, JODD, HALT, ERROR };
 

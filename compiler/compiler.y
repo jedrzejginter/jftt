@@ -136,8 +136,8 @@ value: T_NUM 		{ $$ = __Value("num", $1, NULL); $$->ln = PR_LINE; }
 ;
 
 identifier : T_PIDENTIFIER 											{ $$ = __Id($1, 0, NULL);	$$->ln = PR_LINE; }
-	| T_PIDENTIFIER T_OP_BRACKET T_PIDENTIFIER T_CL_BRACKET 	{ $$ = __Id($1, 0, $3);		$$->ln = PR_LINE; }
-	| T_PIDENTIFIER T_OP_BRACKET T_NUM T_CL_BRACKET 			{ $$ = __Id($1, $3, NULL);	$$->ln = PR_LINE; }
+	| T_PIDENTIFIER T_OP_BRACKET T_PIDENTIFIER T_CL_BRACKET 	{ $$ = __Id($1, 0, $3);		$$->type = "arr"; $$->ln = PR_LINE; }
+	| T_PIDENTIFIER T_OP_BRACKET T_NUM T_CL_BRACKET 			{ $$ = __Id($1, $3, NULL);	$$->type = "arr"; $$->ln = PR_LINE; }
 ;
 
 %%

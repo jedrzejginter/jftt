@@ -2,8 +2,8 @@ VAR
 	a c d
 BEGIN
 	READ a;
-	c := a * 3;
-	d := 3 * a;
+	c := a / 4;
+	d := 30 / a;
 	WRITE c;
 	WRITE d;
 END

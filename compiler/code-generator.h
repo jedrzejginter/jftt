@@ -239,9 +239,60 @@ struct OutputCode *process_expression(struct Expression *e) {
 				ok
 				10 * 7
 				*/
-				val = v1->num * v2->num;
+				double l = log2(v2->num);
+				int l2 = l;
+				l = l - l2;
 
-				oc = merge(oc, fill_reg_with_num(val, 1));
+				if (v2->num == 0) {
+					oc = fill_reg_with_num(0, 1);
+
+				} else if (l == 0) {
+					int it = log2(v2->num);
+
+					oc = fill_reg_with_num(v1->num, 1);
+
+					for (int i = 1; i <= it; i++) {
+						oc = insert(oc, cmd("SHL", 1));
+					}
+
+				} else {
+					int num = v2->num;
+					int pos = 0;
+					int was_even = num % 2 == 0? 1 : 0;
+					int times = 0;
+
+					oc = fill_reg_with_num(v1->num, 1);
+					oc = insert(oc, cmd("ZERO", 0));
+					oc = insert(oc, cmd("STORE", 1));
+					oc = insert(oc, cmd("INC", 0));
+					oc = insert(oc, cmd("STORE", 1));
+					oc = insert(oc, cmd("DEC", 0));
+
+					while (num > 0) {
+						num = num >> 1;
+						pos++;
+
+						if (num % 2 == 1) {
+							for (int i = 1; i <= pos; i++) {
+								oc = insert(oc, cmd("SHL", 1));
+							}
+
+							oc = insert(oc, cmd("INC", 0));
+
+							if (times > 0 || was_even == 0) {
+								oc = insert(oc, cmd("ADD", 1));
+							}
+
+							times = 1;
+
+							if (num > 1) {
+								oc = insert(oc, cmd("STORE", 1));
+								oc = insert(oc, cmd("DEC", 0));
+								oc = insert(oc, cmd("LOAD", 1));
+							}
+						}
+					}
+				}
 
 
 			} else if (strcmp(v1->type, "id") == 0 && strcmp(v2->type, "id") == 0) {
@@ -265,11 +316,13 @@ struct OutputCode *process_expression(struct Expression *e) {
 				id * 10
 				*/
 				double l = log2(v2->num);
+				int l2 = l;
+				l = l - l2;
 
 				if (v2->num == 0) {
 					oc = fill_reg_with_num(0, 1);
 
-				} /*else if ((l - l/1) == 0) {
+				} else if (l == 0) {
 					int it = log2(v2->num);
 
 					oc = id_addr_to_reg(v1->id, 0);
@@ -279,7 +332,7 @@ struct OutputCode *process_expression(struct Expression *e) {
 						oc = insert(oc, cmd("SHL", 1));
 					}
 
-				} */else {
+				} else {
 					int num = v2->num;
 					int pos = 0;
 					int was_even = num % 2 == 0? 1 : 0;
@@ -325,11 +378,13 @@ struct OutputCode *process_expression(struct Expression *e) {
 				10 * id
 				*/
 				double l = log2(v2->num);
+				int l2 = l;
+				l = l - l2;
 
 				if (v1->num == 0) {
 					oc = fill_reg_with_num(0, 1);
 
-				} /*else if ((l - l/1) == 0) {
+				} else if (l == 0) {
 					int it = log2(v1->num);
 
 					oc = id_addr_to_reg(v2->id, 0);
@@ -338,7 +393,7 @@ struct OutputCode *process_expression(struct Expression *e) {
 					for (int i = 1; i <= it; i++) {
 						oc = insert(oc, cmd("SHL", 1));
 					}
-				} */else {
+				} else {
 
 					int num = v1->num;
 					int pos = 0;
@@ -352,10 +407,6 @@ struct OutputCode *process_expression(struct Expression *e) {
 					oc = insert(oc, cmd("INC", 0));
 					oc = insert(oc, cmd("STORE", 1));
 					oc = insert(oc, cmd("DEC", 0));
-
-					// if (num % 2 == 0) {
-					// 	oc = insert(oc, cmd("ZERO", 1));
-					// }
 
 					while (num > 0) {
 						num = num >> 1;
@@ -422,47 +473,58 @@ struct OutputCode *process_expression(struct Expression *e) {
 
 			} else if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "id") == 0) {
 				/*
-				ok
+				TODO: źle
 				11 / a
 				*/
 				if (v1->num == 0) {
 					oc = fill_reg_with_num(0, 1);
 
 				} else {
-					int num = v1->num;
-					int pos = 0;
-
-					oc = id_addr_to_reg(v2->id, 0);
+					oc = fill_reg_with_num(v1->num, 4);
+					oc = merge(oc, id_addr_to_reg(v2->id, 0));
 					oc = insert(oc, cmd("LOAD", 1));
-					oc = insert(oc, cmd("ZERO", 0));
-					oc = insert(oc, cmd("STORE", 1));
-					oc = insert(oc, cmd("INC", 0));
-					oc = insert(oc, cmd("STORE", 1));
-					oc = insert(oc, cmd("DEC", 0));
+					oc = insert(oc, jcmd("JZERO", 1, 8));
+					oc = insert(oc, cmd("ZERO", 1));
+					oc = insert(oc, cmd("INC", 4));
+					oc = insert(oc, jcmd("JZERO", 4, 4));
+					oc = insert(oc, cmd("SUB", 4));
+					oc = insert(oc, cmd("INC", 1));
+					oc = insert(oc, jscmd("JUMP", -3));
+					oc = insert(oc, cmd("DEC", 1));
 
-					while (num > 0) {
-						num = num >> 1;
-						pos++;
-
-						if (num % 2 == 1) {
-							for (int i = 1; i <= pos; i++) {
-								oc = insert(oc, cmd("SHR", 1));
-							}
-
-							oc = insert(oc, cmd("INC", 0));
-							oc = insert(oc, cmd("LOAD", 4));
-							oc = insert(oc, cmd("STORE", 1));
-							oc = insert(oc, cmd("SUB", 4));
-							oc = insert(oc, cmd("STORE", 4));
-
-							if (num > 1) {
-								oc = insert(oc, cmd("DEC", 0));
-								oc = insert(oc, cmd("LOAD", 1));
-							}
-						}
-					}
+					// int num = v1->num;
+					// int pos = 0;
+					//
+					// oc = id_addr_to_reg(v2->id, 0);
+					// oc = insert(oc, cmd("LOAD", 1));
+					// oc = insert(oc, cmd("ZERO", 0));
+					// oc = insert(oc, cmd("STORE", 1));
+					// oc = insert(oc, cmd("INC", 0));
+					// oc = insert(oc, cmd("STORE", 1));
+					// oc = insert(oc, cmd("DEC", 0));
+					//
+					// while (num > 0) {
+					// 	num = num >> 1;
+					// 	pos++;
+					//
+					// 	if (num % 2 == 1) {
+					// 		for (int i = 1; i <= pos; i++) {
+					// 			oc = insert(oc, cmd("SHR", 1));
+					// 		}
+					//
+					// 		oc = insert(oc, cmd("INC", 0));
+					// 		oc = insert(oc, cmd("LOAD", 4));
+					// 		oc = insert(oc, cmd("STORE", 1));
+					// 		oc = insert(oc, cmd("SUB", 4));
+					// 		oc = insert(oc, cmd("STORE", 4));
+					//
+					// 		if (num > 1) {
+					// 			oc = insert(oc, cmd("DEC", 0));
+					// 			oc = insert(oc, cmd("LOAD", 1));
+					// 		}
+					// 	}
+					// }
 				}
-
 
 			} else {
 				/*
@@ -470,12 +532,14 @@ struct OutputCode *process_expression(struct Expression *e) {
 				a / 2
 				*/
 				double l = log2(v2->num);
+				int l2 = l;
+				l = l - l2;
 
 				if (v2->num == 0) {
 					oc = fill_reg_with_num(0, 1);
 					__warn_div_0(v2->ln);
 
-				} else if ((l - l/1) == 0) {
+				} else if (l == 0) {
 					int it = log2(v2->num);
 
 					oc = id_addr_to_reg(v1->id, 0);
