@@ -4,3 +4,4 @@ y.*
 compiler
 interpreter
 *.imp
+*.mr
