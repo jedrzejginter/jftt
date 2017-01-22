@@ -1,0 +1,21 @@
+{ Testowanie mnożenia }
+VAR
+	a b c
+BEGIN
+	a := 3;
+	b := 4;
+
+	c := 3 * 4; IF c = 12 THEN SKIP; ELSE WRITE 1; ENDIF
+	c := 4 * 4; IF c = 16 THEN SKIP; ELSE WRITE 2; ENDIF
+	c := 0 * 1; IF c = 0 THEN SKIP; ELSE WRITE 3; ENDIF
+
+	c := 0 * a; IF c = 0 THEN SKIP; ELSE WRITE 4; ENDIF
+	c := 2 * a; IF c = 6 THEN SKIP; ELSE WRITE 5; ENDIF
+
+	c := a * 100; IF c = 300 THEN SKIP; ELSE WRITE 6; ENDIF
+	c := a * 1999999; IF c = 5999997 THEN SKIP; ELSE WRITE 7; ENDIF
+
+	c := a * b; IF c = 12 THEN SKIP; ELSE WRITE 8; ENDIF
+	c := c * b; IF c = 48 THEN SKIP; ELSE WRITE 9; ENDIF
+
+END

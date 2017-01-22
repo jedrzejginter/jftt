@@ -56,7 +56,7 @@ ID [_a-z]+
 \n				{ register_new_line(); }
 [ \t]+		{ }
 "}"			{ if (cmt == 1) { cmt = 0; } }
-.				{ if (cmt == 0) { __err_unknown_str(0, yytext); exit(0); return(yytext[0]); } }
+.				{ if (cmt == 0) { __err_unknown_str(0, yytext); exit(1); } }
 %%
 
 int yywrap(void) {

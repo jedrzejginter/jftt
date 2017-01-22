@@ -1,9 +1,17 @@
 VAR
-	a c d
+	a b c
 BEGIN
 	READ a;
-	c := a / 4;
-	d := 30 / a;
+	READ b;
+	c := a / b;
 	WRITE c;
-	WRITE d;
+
+	c := 20 * a;
+	WRITE c;
+
+	c := a * 20;
+	WRITE c;
+
+	c := 600 * 2000;
+	WRITE c;
 END

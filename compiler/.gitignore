@@ -3,5 +3,5 @@ lex.yy.*
 y.*
 compiler
 interpreter
-*.imp
-*.mr
+./*.imp
+./*.mr

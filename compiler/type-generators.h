@@ -1,29 +1,3 @@
-struct Declaration *__Declaration(char *name, int size) {
-	struct Declaration *d = malloc(sizeof(struct Declaration));
-
-	d->name = name;
-	d->size = size;
-	d->next = NULL;
-
-	return d;
-}
-
-struct Declarations *__Declarations(struct Declarations *current, struct Declaration *d) {
-	if (current == NULL) {
-		current = malloc(sizeof(struct Declarations));
-	}
-
-	if (current->root == NULL) {
-		current->root = d;
-		current->last = d;
-
-	} else if (d != NULL) {
-		current->last->next = d;
-		current->last = d;
-	}
-
-	return current;
-}
 
 struct Id *__Id(char *name, int index_num, char *index_id) {
 	struct Id *e = malloc(sizeof(struct Id));

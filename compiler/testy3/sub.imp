@@ -1,0 +1,21 @@
+{ Testowanie odejmowania }
+VAR
+	a b c
+BEGIN
+	a := 3;
+	b := 4;
+
+	c := 3 - 4; IF c = 0 THEN SKIP; ELSE WRITE 1; ENDIF
+	c := 4 - 4; IF c = 0 THEN SKIP; ELSE WRITE 2; ENDIF
+	c := 1 - 0; IF c = 1 THEN SKIP; ELSE WRITE 3; ENDIF
+
+	c := 0 - a; IF c = 0 THEN SKIP; ELSE WRITE 4; ENDIF
+	c := 20 - a; IF c = 17 THEN SKIP; ELSE WRITE 5; ENDIF
+
+	c := a - 2; IF c = 1 THEN SKIP; ELSE WRITE 6; ENDIF
+	c := a - 20; IF c = 0 THEN SKIP; ELSE WRITE 7; ENDIF
+
+	c := b - a; IF c = 1 THEN SKIP; ELSE WRITE 8; ENDIF
+	c := c - b; IF c = 0 THEN SKIP; ELSE WRITE 9; ENDIF
+
+END

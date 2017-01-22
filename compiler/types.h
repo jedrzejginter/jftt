@@ -1,13 +1,3 @@
-struct Declaration {
-	char *name;						// nazwa zmiennej
-	int size;						// rozmiar tablicy
-	struct Declaration *next;	// następna deklaracja (dla Declarations)
-};
-
-struct Declarations {
-	struct Declaration *root;
-	struct Declaration *last;
-};
 
 struct Id {
 	char *name;			// nazwa zmiennej np `dzielnik`
@@ -21,7 +11,7 @@ struct Value {
 	char *type;		// typ wartości: { num, id }
 	struct Id *id;	// wskaźnik na wartość, jeśli type == id, else: NULL
 	int num;			// wartość jako int, jeśli type == num
-	int ln;
+	int ln;			// numer linii w której występuje wartość
 };
 
 struct Condition {
@@ -40,8 +30,8 @@ struct Commands {
 	int size;					// ilość komend
 	struct Command *root;	// pierwsza komenda
 	struct Command *last;	// ostatnia komenda
-	struct Command *cmds[4096];
-	int cmds_size;
+	struct Command *cmds[4096];	// lista komend zagnieżdżonych
+	int cmds_size;				// liczba komend
 };
 
 struct Command {
@@ -56,5 +46,5 @@ struct Command {
 	struct Value *val2;		// wartość to/downto dla for
 
 	struct Command *next;	// wskaźnik na kolejną komendę (potrzebne dla listy komend)
-	int ln;
+	int ln;						// numer linii
 };
