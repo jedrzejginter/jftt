@@ -7,6 +7,7 @@
 #include "code.h"
 #include "memory.h"
 #include "type-generators.h"
+#include "rm-cmds.h"
 #include "code-generator.h"
 #define YYDEBUG 1
 int yylex(void);
@@ -49,12 +50,12 @@ char *output_file;
 %%
 program : T_VAR vdeclarations T_BEG commands T_END {
 		if (ERRORS > 0) {
-			exit(0);
+			exit(1);
 		} else {
 			struct OutputCode *oc = code_gen($4);
 
 			if (ERRORS > 0) {
-				exit(0);
+				exit(1);
 			} else {
 				print_cmd_tree(output_file, oc, 0);
 				print_compil_succ();

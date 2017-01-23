@@ -104,45 +104,6 @@ struct RMLine *jscmd(char *command, int line) {
 }
 
 
-struct OutputCode *load_num_to_register(int num, int reg) {
-	struct OutputCode *f = malloc(sizeof(struct OutputCode));
-	int mod;
-	int ix = 0;
-	int bin[1024];
-	int org_num = num;
-
-	f->cmd_tree_size = 0;
-	f->add_cmd_tree_size = 0;
-	f->type = "num";
-	f->value = num;
-	f->swap_blocks = 0;
-
-	f = insert(f, cmd("ZERO", reg));
-
-	if (num > 0) {
-
-		while (num > 0) {
-			mod = num % 2;
-			num = (num - mod) / 2;
-
-			bin[ix] = mod;
-			ix++;
-		}
-
-		for (int i = ix - 1; i >= 0; i--) {
-			if (i != ix - 1) {
-				f = insert(f, cmd("SHL", reg));
-			}
-
-			if (bin[i] == 1) {
-				f = insert(f, cmd("INC", reg));
-			}
-		}
-	}
-
-	return f;
-}
-
 void print_line(FILE *fp, char *l) {
 	fprintf(fp, "%s\n", l);
 	RM_LINE += 1;
