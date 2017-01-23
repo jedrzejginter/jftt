@@ -5,13 +5,6 @@ BEGIN
 	READ b;
 	c := a / b;
 	WRITE c;
-
-	c := 20 * a;
-	WRITE c;
-
-	c := a * 20;
-	WRITE c;
-
-	c := 600 * 2000;
+	c := a % b;
 	WRITE c;
 END

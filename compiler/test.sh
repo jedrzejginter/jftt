@@ -7,3 +7,6 @@ echo -e "--- Odejmowanie ---"
 
 echo -e "--- Mnożenie ---"
 ./compiler test.mr < testy3/mult.imp && interpreter/interpreter-cln test.mr
+
+echo -e "--- Różne testy ---"
+./compiler test.mr < testy3/mixed.imp && interpreter/interpreter-cln test.mr

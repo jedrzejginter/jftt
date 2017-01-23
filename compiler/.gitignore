@@ -1,7 +1,8 @@
-*.o
-lex.yy.*
-y.*
+/*.o
+/lex.yy.*
+/y.*
 compiler
 interpreter
-./*.imp
-./*.mr
+/*.imp
+/*.mr
+*.zip

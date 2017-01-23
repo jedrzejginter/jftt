@@ -46,9 +46,9 @@ void __warn_always_false(int line) {
 }
 
 void __err_bad_syntax() {
-	sprintf(buf, "Niepoprawna składnia");
-	print_err(-1, buf);
-	exit(0);
+	sprintf(buf, "Nierozpoznany napis");
+	print_err(PR_LINE, buf);
+	exit(1);
 }
 
 void __err_unknown_str(int line, char *str) {

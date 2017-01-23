@@ -307,285 +307,221 @@ struct OutputCode *process_expression(struct Expression *e) {
 
 
 		} else if (strcmp(e->op, "/") == 0) {
-			if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "num") == 0) {
-				/*
-				ok
-				11 / 2
-				*/
-				if (v2->num == 0) {
-					val = 0;
-					__warn_div_0(v2->ln);
+			struct OutputCode *oc2, *oc3;
 
-				} else {
-					val = (v1->num - v1->num % v2->num) / v2->num;
-				}
-
-				val = val < 0? 0 : val;
-
-				oc = fill_reg_with_num(val, 1);
-
-			} else if (strcmp(v1->type, "id") == 0 && strcmp(v2->type, "id") == 0) {
-				/*
-				ok
-				a / b
-				*/
-				oc = id_addr_to_reg(v1->id, 0);
+			if (strcmp(v2->type, "id") == 0) {
+				oc = id_addr_to_reg(v2->id, 0);
 				oc = insert(oc, cmd("LOAD", 4));
-				oc = merge(oc, id_addr_to_reg(v2->id, 0));
-				oc = insert(oc, cmd("LOAD", 1));
-				oc = insert(oc, jcmd("JZERO", 1, 8));
-				oc = insert(oc, cmd("ZERO", 1));
-				oc = insert(oc, cmd("INC", 4));
-				oc = insert(oc, jcmd("JZERO", 4, 4));
-				oc = insert(oc, cmd("SUB", 4));
-				oc = insert(oc, cmd("INC", 1));
-				oc = insert(oc, jscmd("JUMP", -3));
-				oc = insert(oc, cmd("DEC", 1));
-
-			} else if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "id") == 0) {
-				/*
-				ok
-				TODO: wolne
-				11 / a
-				*/
-				if (v1->num == 0) {
-					oc = fill_reg_with_num(0, 1);
-
-				} else {
-					oc = fill_reg_with_num(v1->num, 4);
-					oc = merge(oc, id_addr_to_reg(v2->id, 0));
-					oc = insert(oc, cmd("LOAD", 1));
-					oc = insert(oc, jcmd("JZERO", 1, 8));
-					oc = insert(oc, cmd("ZERO", 1));
-					oc = insert(oc, cmd("INC", 4));
-					oc = insert(oc, jcmd("JZERO", 4, 4));
-					oc = insert(oc, cmd("SUB", 4));
-					oc = insert(oc, cmd("INC", 1));
-					oc = insert(oc, jscmd("JUMP", -3));
-					oc = insert(oc, cmd("DEC", 1));
-
-					// int num = v1->num;
-					// int pos = 0;
-					//
-					// oc = id_addr_to_reg(v2->id, 0);
-					// oc = insert(oc, cmd("LOAD", 1));
-					// oc = insert(oc, cmd("ZERO", 0));
-					// oc = insert(oc, cmd("STORE", 1));
-					// oc = insert(oc, cmd("INC", 0));
-					// oc = insert(oc, cmd("STORE", 1));
-					// oc = insert(oc, cmd("DEC", 0));
-					//
-					// while (num > 0) {
-					// 	num = num >> 1;
-					// 	pos++;
-					//
-					// 	if (num % 2 == 1) {
-					// 		for (int i = 1; i <= pos; i++) {
-					// 			oc = insert(oc, cmd("SHR", 1));
-					// 		}
-					//
-					// 		oc = insert(oc, cmd("INC", 0));
-					// 		oc = insert(oc, cmd("LOAD", 4));
-					// 		oc = insert(oc, cmd("STORE", 1));
-					// 		oc = insert(oc, cmd("SUB", 4));
-					// 		oc = insert(oc, cmd("STORE", 4));
-					//
-					// 		if (num > 1) {
-					// 			oc = insert(oc, cmd("DEC", 0));
-					// 			oc = insert(oc, cmd("LOAD", 1));
-					// 		}
-					// 	}
-					// }
-				}
-
 			} else {
-				/*
-				ok
-				a / 2
-				*/
-				double l = log2(v2->num);
-				int l2 = l;
-				l = l - l2;
-
-				if (v2->num == 0) {
-					oc = fill_reg_with_num(0, 1);
-					__warn_div_0(v2->ln);
-
-				} else if (l == 0) {
-					int it = log2(v2->num);
-
-					oc = id_addr_to_reg(v1->id, 0);
-					oc = insert(oc, cmd("LOAD", 1));
-
-					for (int i = 1; i <= it; i++) {
-						oc = insert(oc, cmd("SHR", 1));
-					}
-				} else {
-					struct Id *tmp_id = __Id("_tmp0", 0, NULL);
-
-					__declare_var(tmp_id->name, 0, 0, "num");
-					oc = id_addr_to_reg(v1->id, 0);
-					oc = insert(oc, cmd("LOAD", 4));
-					oc = merge(oc, id_addr_to_reg(tmp_id, 0));
-					oc = merge(oc, fill_reg_with_num(v2->num, 1));
-					oc = insert(oc, jcmd("JZERO", 1, 9));
-					oc = insert(oc, cmd("STORE", 1));
-					oc = insert(oc, cmd("ZERO", 1));
-					oc = insert(oc, cmd("INC", 4));
-					oc = insert(oc, jcmd("JZERO", 4, 4));
-					oc = insert(oc, cmd("SUB", 4));
-					oc = insert(oc, cmd("INC", 1));
-					oc = insert(oc, jscmd("JUMP", -3));
-					oc = insert(oc, cmd("DEC", 1));
-					__unset_var(tmp_id->name);
-				}
+				oc = fill_reg_with_num(v2->num, 4);
 			}
+
+			oc3 = fill_reg_with_num(1, 0);
+			oc3 = insert(oc3, cmd("STORE", 4));
+			oc3 = insert(oc3, cmd("INC", 0));
+			oc3 = insert(oc3, cmd("INC", 0));
+			oc3 = insert(oc3, cmd("STORE", 4));
+
+			// p2 = 0
+			oc3 = insert(oc3, cmd("ZERO", 4));
+			oc3 = insert(oc3, cmd("DEC", 0));
+			oc3 = insert(oc3, cmd("STORE", 4));
+
+			if (strcmp(v1->type, "id") == 0) {
+				oc3 = merge(oc3, id_addr_to_reg(v1->id, 0));
+				oc3 = insert(oc3, cmd("LOAD", 4));
+			} else {
+				oc3 = merge(oc3, fill_reg_with_num(v1->num, 4));
+			}
+
+			oc3 = insert(oc3, cmd("ZERO", 0));
+			oc3 = insert(oc3, cmd("STORE", 4));
+
+			oc2 = fill_reg_with_num(1, 1);
+			oc2 = insert(oc2, cmd("ZERO", 0)); //A
+			oc2 = insert(oc2, cmd("INC", 0));
+			oc2 = insert(oc2, cmd("LOAD", 4));
+			oc2 = insert(oc2, cmd("SHL", 4));
+			oc2 = insert(oc2, cmd("STORE", 4));
+			oc2 = insert(oc2, cmd("ZERO", 0));
+			oc2 = insert(oc2, cmd("SUB", 4));
+
+			oc2 = insert(oc2, jcmd("JZERO", 4, 2));
+			oc2 = insert(oc2, jscmd("JUMP", 3));
+			oc2 = insert(oc2, cmd("SHL", 1));
+			oc2 = insert(oc2, jscmd("JUMP", -10));
+
+			oc2 = insert(oc2, cmd("ZERO", 0));
+			oc2 = insert(oc2, cmd("INC", 0));
+			oc2 = insert(oc2, cmd("LOAD", 4));
+			oc2 = insert(oc2, cmd("SHR", 4));
+			oc2 = insert(oc2, cmd("STORE", 4));
+
+			oc2 = insert(oc2, cmd("INC", 0)); //r0=2
+			oc2 = insert(oc2, cmd("ADD", 1)); //r1=r1+p2
+			oc2 = insert(oc2, cmd("STORE", 1)); //p2=r1
+
+			oc2 = insert(oc2, cmd("ZERO", 0));
+			oc2 = insert(oc2, cmd("LOAD", 4));
+			oc2 = insert(oc2, cmd("INC", 0));
+			oc2 = insert(oc2, cmd("SUB", 4));
+			oc2 = insert(oc2, cmd("ZERO", 0));
+			oc2 = insert(oc2, cmd("STORE", 4));
+
+			oc2 = insert(oc2, cmd("ZERO", 0));
+			oc2 = insert(oc2, cmd("INC", 0));
+			oc2 = insert(oc2, cmd("INC", 0));
+			oc2 = insert(oc2, cmd("INC", 0)); //r0=3
+			oc2 = insert(oc2, cmd("LOAD", 1));
+			oc2 = insert(oc2, cmd("ZERO", 0));
+			oc2 = insert(oc2, cmd("INC", 0));
+			oc2 = insert(oc2, cmd("STORE", 1));
+
+			oc2 = insert(oc2, cmd("ZERO", 0));
+			oc2 = insert(oc2, cmd("LOAD", 1));
+			oc2 = insert(oc2, cmd("INC", 1));
+			oc2 = insert(oc2, cmd("INC", 0));
+			oc2 = insert(oc2, cmd("SUB", 1));
+
+			oc2 = insert(oc2, jcmd("JZERO", 1, 7));
+
+			oc2 = insert(oc2, cmd("ZERO", 0));
+			oc2 = insert(oc2, cmd("INC", 0));
+			oc2 = insert(oc2, cmd("INC", 0));
+			oc2 = insert(oc2, cmd("INC", 0)); //r0=3
+			oc2 = insert(oc2, cmd("LOAD", 1));
+
+			int tree_size = oc2->cmd_tree_size;
+
+			oc3 = insert(oc3, cmd("ZERO", 0));
+			oc3 = insert(oc3, cmd("INC", 0));
+			oc3 = insert(oc3, cmd("INC", 4));
+			oc3 = insert(oc3, cmd("SUB", 4));
+
+			oc3 = insert(oc3, jcmd("JZERO", 4, tree_size + 2 + 1 + 2));
+			oc3 = insert(oc3, cmd("ZERO", 0));
+			oc3 = insert(oc3, cmd("LOAD", 4));
+
+			oc3 = insert(oc3, jcmd("JZERO", 4, tree_size + 2));
+			oc3 = merge(oc3, oc2);
+			oc3 = insert(oc3, jscmd("JUMP", - tree_size - 1));
+
+			int oc3_tree_size = oc3->cmd_tree_size;
+			oc = insert(oc, jcmd("JZERO", 4, oc3_tree_size + 1));
+			oc = merge(oc, oc3);
+
+			oc = insert(oc, cmd("ZERO", 0));
+			oc = insert(oc, cmd("INC", 0));
+			oc = insert(oc, cmd("SHL", 0));
+			oc = insert(oc, cmd("LOAD", 1));
 
 		} else if (strcmp(e->op, "%") == 0) {
-			if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "num") == 0) {
-				/*
-				ok
-				11 % 2
-				*/
-				int val;
+			struct OutputCode *oc2, *oc3;
 
-				if (v2->num == 0) {
-					val = 0;
-					__warn_div_0(v2->ln);
-
-				} else {
-					val = v1->num % v2->num;
-				}
-
-				val = val < 0? 0 : val;
-
-				oc = fill_reg_with_num(val, 1);
-
-			} else if (strcmp(v1->type, "id") == 0 && strcmp(v2->type, "id") == 0) {
-				/*
-				ok
-				a % b
-				*/
-				oc = id_addr_to_reg(v2->id, 4);
-				oc = insert(oc, cmd("COPY", 4));
-				oc = insert(oc, cmd("LOAD", 1));
-				oc = insert(oc, cmd("ZERO", 0));
-				oc = insert(oc, cmd("STORE", 4));
-
-				struct OutputCode *oc2 = id_addr_to_reg(v1->id, 0);
-				int oc2_len = oc2->cmd_tree_size;
-
-				oc = insert(oc, jcmd("JZERO", 1, 24 + oc2_len));
-				oc = merge(oc, oc2);
-				oc = insert(oc, cmd("LOAD", 1));
+			if (strcmp(v2->type, "id") == 0) {
+				oc = id_addr_to_reg(v2->id, 0);
 				oc = insert(oc, cmd("LOAD", 4));
-				oc = insert(oc, cmd("ZERO", 0));
-				oc = insert(oc, cmd("LOAD", 0));
-				oc = insert(oc, jcmd("JZERO", 4, 5));
-				oc = insert(oc, cmd("SUB", 4));
-				oc = insert(oc, jcmd("JZERO", 4, 3));
-				oc = insert(oc, cmd("SUB", 1));
-				oc = insert(oc, jscmd("JUMP", -4));
-
-				oc = insert(oc, cmd("ZERO", 0));
-				oc = insert(oc, cmd("INC", 0));
-				oc = insert(oc, cmd("STORE", 1));
-				oc = insert(oc, cmd("INC", 1));
-				oc = insert(oc, cmd("ZERO", 0));
-				oc = insert(oc, cmd("LOAD", 0));
-				oc = insert(oc, cmd("SUB", 1));
-				oc = insert(oc, jcmd("JZERO", 1, 3));
-				oc = insert(oc, cmd("ZERO", 1));
-				oc = insert(oc, jscmd("JUMP", 4));
-				oc = insert(oc, cmd("ZERO", 0));
-				oc = insert(oc, cmd("INC", 0));
-				oc = insert(oc, cmd("LOAD", 1));
-			} else if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "id") == 0) {
-				/*
-				ok
-				11 % a
-				*/
-				if (v1->num == 0) {
-					oc = fill_reg_with_num(0, 1);
-
-				} else {
-					oc = id_addr_to_reg(v2->id, 4);
-					oc = insert(oc, cmd("COPY", 4));
-					oc = insert(oc, cmd("LOAD", 1));
-					oc = insert(oc, cmd("ZERO", 0));
-					oc = insert(oc, cmd("STORE", 4));
-
-					struct OutputCode *oc2 = fill_reg_with_num(v1->num, 1);
-					oc2 = merge(oc2, fill_reg_with_num(v1->num, 4));
-					int oc2_len = oc2->cmd_tree_size;
-
-					oc = insert(oc, jcmd("JZERO", 1, 21 + oc2_len));
-					oc = merge(oc, oc2);
-					oc = insert(oc, cmd("ZERO", 0));
-					oc = insert(oc, cmd("LOAD", 0));
-					oc = insert(oc, jcmd("JZERO", 4, 5));
-					oc = insert(oc, cmd("SUB", 4));
-					oc = insert(oc, jcmd("JZERO", 4, 3));
-					oc = insert(oc, cmd("SUB", 1));
-					oc = insert(oc, jscmd("JUMP", -4));
-
-					oc = insert(oc, cmd("ZERO", 0));
-					oc = insert(oc, cmd("INC", 0));
-					oc = insert(oc, cmd("STORE", 1));
-					oc = insert(oc, cmd("INC", 1));
-					oc = insert(oc, cmd("ZERO", 0));
-					oc = insert(oc, cmd("LOAD", 0));
-					oc = insert(oc, cmd("SUB", 1));
-					oc = insert(oc, jcmd("JZERO", 1, 3));
-					oc = insert(oc, cmd("ZERO", 1));
-					oc = insert(oc, jscmd("JUMP", 4));
-					oc = insert(oc, cmd("ZERO", 0));
-					oc = insert(oc, cmd("INC", 0));
-					oc = insert(oc, cmd("LOAD", 1));
-
-				}
 			} else {
-				/*
-				ok
-				a % 11
-				*/
-				if (v2->num == 0) {
-					oc = fill_reg_with_num(0, 1);
-
-				} else {
-					oc = fill_reg_with_num(v2->num, 1);
-					oc = insert(oc, cmd("ZERO", 0));
-					oc = insert(oc, cmd("STORE", 1));
-
-					struct OutputCode *oc2 = id_addr_to_reg(v1->id, 0);
-					int oc2_len = oc2->cmd_tree_size;
-
-					oc = insert(oc, jcmd("JZERO", 1, 22 + oc2_len));
-					oc = merge(oc, oc2);
-					oc = insert(oc, cmd("LOAD", 1));
-					oc = insert(oc, cmd("LOAD", 4));
-					oc = insert(oc, cmd("ZERO", 0));
-					oc = insert(oc, jcmd("JZERO", 4, 5));
-					oc = insert(oc, cmd("SUB", 4));
-					oc = insert(oc, jcmd("JZERO", 4, 3));
-					oc = insert(oc, cmd("SUB", 1));
-					oc = insert(oc, jscmd("JUMP", -4));
-
-					oc = insert(oc, cmd("ZERO", 0));
-					oc = insert(oc, cmd("INC", 0));
-					oc = insert(oc, cmd("STORE", 1));
-					oc = insert(oc, cmd("INC", 1));
-					oc = insert(oc, cmd("ZERO", 0));
-					oc = insert(oc, cmd("SUB", 1));
-					oc = insert(oc, jcmd("JZERO", 1, 3));
-					oc = insert(oc, cmd("ZERO", 1));
-					oc = insert(oc, jscmd("JUMP", 4));
-					oc = insert(oc, cmd("ZERO", 0));
-					oc = insert(oc, cmd("INC", 0));
-					oc = insert(oc, cmd("LOAD", 1));
-
-				}
+				oc = fill_reg_with_num(v2->num, 4);
 			}
+
+			oc3 = fill_reg_with_num(1, 0);
+			oc3 = insert(oc3, cmd("STORE", 4));
+			oc3 = insert(oc3, cmd("INC", 0));
+			oc3 = insert(oc3, cmd("INC", 0));
+			oc3 = insert(oc3, cmd("STORE", 4));
+
+			// p2 = 0
+			oc3 = insert(oc3, cmd("ZERO", 4));
+			oc3 = insert(oc3, cmd("DEC", 0));
+			oc3 = insert(oc3, cmd("STORE", 4));
+
+			if (strcmp(v1->type, "id") == 0) {
+				oc3 = merge(oc3, id_addr_to_reg(v1->id, 0));
+				oc3 = insert(oc3, cmd("LOAD", 4));
+			} else {
+				oc3 = merge(oc3, fill_reg_with_num(v1->num, 4));
+			}
+
+			oc3 = insert(oc3, cmd("ZERO", 0));
+			oc3 = insert(oc3, cmd("STORE", 4));
+
+			oc2 = fill_reg_with_num(1, 1);
+			oc2 = insert(oc2, cmd("ZERO", 0)); //A
+			oc2 = insert(oc2, cmd("INC", 0));
+			oc2 = insert(oc2, cmd("LOAD", 4));
+			oc2 = insert(oc2, cmd("SHL", 4));
+			oc2 = insert(oc2, cmd("STORE", 4));
+			oc2 = insert(oc2, cmd("ZERO", 0));
+			oc2 = insert(oc2, cmd("SUB", 4));
+
+			oc2 = insert(oc2, jcmd("JZERO", 4, 2));
+			oc2 = insert(oc2, jscmd("JUMP", 3));
+			oc2 = insert(oc2, cmd("SHL", 1));
+			oc2 = insert(oc2, jscmd("JUMP", -10));
+
+			oc2 = insert(oc2, cmd("ZERO", 0));
+			oc2 = insert(oc2, cmd("INC", 0));
+			oc2 = insert(oc2, cmd("LOAD", 4));
+			oc2 = insert(oc2, cmd("SHR", 4));
+			oc2 = insert(oc2, cmd("STORE", 4));
+
+			oc2 = insert(oc2, cmd("INC", 0)); //r0=2
+			oc2 = insert(oc2, cmd("ADD", 1)); //r1=r1+p2
+			oc2 = insert(oc2, cmd("STORE", 1)); //p2=r1
+
+			oc2 = insert(oc2, cmd("ZERO", 0));
+			oc2 = insert(oc2, cmd("LOAD", 4));
+			oc2 = insert(oc2, cmd("INC", 0));
+			oc2 = insert(oc2, cmd("SUB", 4));
+			oc2 = insert(oc2, cmd("ZERO", 0));
+			oc2 = insert(oc2, cmd("STORE", 4));
+
+			oc2 = insert(oc2, cmd("ZERO", 0));
+			oc2 = insert(oc2, cmd("INC", 0));
+			oc2 = insert(oc2, cmd("INC", 0));
+			oc2 = insert(oc2, cmd("INC", 0)); //r0=3
+			oc2 = insert(oc2, cmd("LOAD", 1));
+			oc2 = insert(oc2, cmd("ZERO", 0));
+			oc2 = insert(oc2, cmd("INC", 0));
+			oc2 = insert(oc2, cmd("STORE", 1));
+
+			oc2 = insert(oc2, cmd("ZERO", 0));
+			oc2 = insert(oc2, cmd("LOAD", 1));
+			oc2 = insert(oc2, cmd("INC", 1));
+			oc2 = insert(oc2, cmd("INC", 0));
+			oc2 = insert(oc2, cmd("SUB", 1));
+
+			oc2 = insert(oc2, jcmd("JZERO", 1, 7));
+
+			oc2 = insert(oc2, cmd("ZERO", 0));
+			oc2 = insert(oc2, cmd("INC", 0));
+			oc2 = insert(oc2, cmd("INC", 0));
+			oc2 = insert(oc2, cmd("INC", 0)); //r0=3
+			oc2 = insert(oc2, cmd("LOAD", 1));
+
+			int tree_size = oc2->cmd_tree_size;
+
+			oc3 = insert(oc3, cmd("ZERO", 0));
+			oc3 = insert(oc3, cmd("INC", 0));
+			oc3 = insert(oc3, cmd("INC", 4));
+			oc3 = insert(oc3, cmd("SUB", 4));
+
+			oc3 = insert(oc3, jcmd("JZERO", 4, tree_size + 2 + 1 + 2));
+			oc3 = insert(oc3, cmd("ZERO", 0));
+			oc3 = insert(oc3, cmd("LOAD", 4));
+
+			oc3 = insert(oc3, jcmd("JZERO", 4, tree_size + 2));
+			oc3 = merge(oc3, oc2);
+			oc3 = insert(oc3, jscmd("JUMP", - tree_size - 1));
+
+			int oc3_tree_size = oc3->cmd_tree_size;
+			oc = insert(oc, jcmd("JZERO", 4, oc3_tree_size + 1));
+			oc = merge(oc, oc3);
+
+			oc = insert(oc, cmd("ZERO", 0));
+			oc = insert(oc, cmd("LOAD", 1));
+
 		}
 	}
 
