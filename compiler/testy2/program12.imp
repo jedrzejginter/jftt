@@ -12,7 +12,7 @@ BEGIN
 	aa[2] := 0 / 0;
 	aa[3] := a / 1;
 	aa[4] := 1 / a;
-	
+
 	WRITE aa[0]; { 0 }
 	WRITE aa[1]; { 0 }
 	WRITE aa[2]; { 0 }
@@ -58,4 +58,3 @@ BEGIN
 	WRITE 1111111111;
 
 END
-

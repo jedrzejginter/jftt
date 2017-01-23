@@ -109,7 +109,7 @@ struct OutputCode *process_expression(struct Expression *e) {
 			struct Var *var = __get_var(v1->id->name);
 
 			if (var == NULL) {
-				__err_undecl_var(v1->id->ln, var->name);
+				__err_undecl_var(v1->id->ln, v1->id->name);
 				exit(1);
 
 			} else if (var->is_initialized == 0) {
@@ -129,7 +129,11 @@ struct OutputCode *process_expression(struct Expression *e) {
 			var = __get_var(v1->id->name);
 
 			if (var == NULL) {
-				__err_undecl_var(v1->id->ln, var->name);
+				printf("is null\n");
+			}
+
+			if (var == NULL) {
+				__err_undecl_var(v1->id->ln, v1->id->name);
 				exit(1);
 
 			} else if (var->is_initialized == 0) {
@@ -143,7 +147,7 @@ struct OutputCode *process_expression(struct Expression *e) {
 			var = __get_var(v2->id->name);
 
 			if (var == NULL) {
-				__err_undecl_var(v2->id->ln, var->name);
+				__err_undecl_var(v2->id->ln, v2->id->name);
 				exit(1);
 
 			} else if (var->is_initialized == 0) {
@@ -416,6 +420,7 @@ struct OutputCode *process_expression(struct Expression *e) {
 			oc = insert(oc, cmd("LOAD", 1));
 
 		} else if (strcmp(e->op, "%") == 0) {
+
 			struct OutputCode *oc2, *oc3;
 
 			if (strcmp(v2->type, "id") == 0) {
@@ -516,7 +521,11 @@ struct OutputCode *process_expression(struct Expression *e) {
 			oc3 = insert(oc3, jscmd("JUMP", - tree_size - 1));
 
 			int oc3_tree_size = oc3->cmd_tree_size;
-			oc = insert(oc, jcmd("JZERO", 4, oc3_tree_size + 1));
+			oc = insert(oc, jcmd("JZERO", 4, 2));
+			oc = insert(oc, jscmd("JUMP", 4));
+			oc = insert(oc, cmd("ZERO", 0));
+			oc = insert(oc, cmd("STORE", 0));
+			oc = insert(oc, jscmd("JUMP", oc3_tree_size + 1));
 			oc = merge(oc, oc3);
 
 			oc = insert(oc, cmd("ZERO", 0));
@@ -540,7 +549,7 @@ struct OutputCode *process_condition(struct Condition *c) {
 		var = __get_var(v1->id->name);
 
 		if (var == NULL) {
-			__err_undecl_var(v1->id->ln, var->name);
+			__err_undecl_var(v1->id->ln, v1->id->name);
 			exit(1);
 
 		} else if (var->is_initialized == 0) {
@@ -554,7 +563,7 @@ struct OutputCode *process_condition(struct Condition *c) {
 		var = __get_var(v2->id->name);
 
 		if (var == NULL) {
-			__err_undecl_var(v2->id->ln, var->name);
+			__err_undecl_var(v2->id->ln, v2->id->name);
 			exit(1);
 
 		} else if (var->is_initialized == 0) {
@@ -991,7 +1000,7 @@ struct OutputCode *command_gen(struct Command *c) {
 		} else {
 
 			__set_var_init(c->id->name);
-			oc = merge(oc, process_expression(c->expr));
+			oc = process_expression(c->expr);
 			oc = merge(oc, id_addr_to_reg(c->id, 0));
 			oc = insert(oc, cmd("STORE", 1));
 		}
@@ -1077,7 +1086,7 @@ struct OutputCode *command_gen(struct Command *c) {
 		if (strcmp(v1->type, "id") == 0) {
 			var = __get_var(v1->id->name);
 			if (var == NULL) {
-				__err_undecl_var(v1->id->ln, var->name);
+				__err_undecl_var(v1->id->ln, v1->id->name);
 			} else if (var->is_initialized == 0) {
 				__err_uninit_var(v1->id->ln, var->name);
 			}
@@ -1086,7 +1095,7 @@ struct OutputCode *command_gen(struct Command *c) {
 		if (strcmp(v2->type, "id") == 0) {
 			var = __get_var(v2->id->name);
 			if (var == NULL) {
-				__err_undecl_var(v2->id->ln, var->name);
+				__err_undecl_var(v2->id->ln, v2->id->name);
 			} else if (var->is_initialized == 0) {
 				__err_uninit_var(v2->id->ln, var->name);
 			}
@@ -1188,7 +1197,7 @@ struct OutputCode *command_gen(struct Command *c) {
 		if (strcmp(v1->type, "id") == 0) {
 			var = __get_var(v1->id->name);
 			if (var == NULL) {
-				__err_undecl_var(v1->id->ln, var->name);
+				__err_undecl_var(v1->id->ln, v1->id->name);
 			} else if (var->is_initialized == 0) {
 				__err_uninit_var(v1->id->ln, var->name);
 			}
@@ -1197,7 +1206,7 @@ struct OutputCode *command_gen(struct Command *c) {
 		if (strcmp(v2->type, "id") == 0) {
 			var = __get_var(v2->id->name);
 			if (var == NULL) {
-				__err_undecl_var(v2->id->ln, var->name);
+				__err_undecl_var(v2->id->ln, v1->id->name);
 			} else if (var->is_initialized == 0) {
 				__err_uninit_var(v2->id->ln, var->name);
 			}
