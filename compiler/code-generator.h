@@ -1,38 +1,11 @@
 #include <math.h>
 
-struct Register {
-	int is_definite;
-	int value;
-};
-
-struct Registers {
-	struct Register *reg[5];
-};
-
-struct Registers *R;
-
-void __copy_reg_def(int, int);
 struct OutputCode *fill_reg_with_num(int num, int reg);
 struct OutputCode *id_addr_to_reg(struct Id *, int);
 struct OutputCode *new_output_code();
 struct OutputCode *code_gen(struct Commands *);
 
 int while_loop_id_cnt = 0;
-
-void __set_reg_def(int reg, struct Var *v) {
-	R->reg[reg]->is_definite = v->is_definite;
-	R->reg[reg]->value = (v->is_definite == 1)? v->value : 0;
-}
-
-void __set_reg_undef(int reg) {
-	R->reg[reg]->is_definite = 0;
-	R->reg[reg]->value = 0;
-}
-
-void __copy_reg_def(int from_reg, int to_reg) {
-	R->reg[to_reg]->is_definite = R->reg[from_reg]->is_definite;
-	R->reg[to_reg]->value = R->reg[from_reg]->value;
-}
 
 struct OutputCode *id_addr_to_reg(struct Id *id, int reg) {
 	struct OutputCode *oc = new_output_code();
@@ -61,9 +34,7 @@ struct OutputCode *id_addr_to_reg(struct Id *id, int reg) {
 				oc = fill_reg_with_num(v->memory_index, 4);
 				oc = merge(oc, fill_reg_with_num(vv->memory_index, 0));
 				oc = insert(oc, __ADD(4));
-				__set_reg_def(reg, vv);
 				oc = insert(oc, __COPY(4));
-				__copy_reg_def(reg, 0);
 				return oc;
 			}
 
@@ -129,10 +100,6 @@ struct OutputCode *process_expression(struct Expression *e) {
 			var = __get_var(v1->id->name);
 
 			if (var == NULL) {
-				printf("is null\n");
-			}
-
-			if (var == NULL) {
 				__err_undecl_var(v1->id->ln, v1->id->name);
 				exit(1);
 
@@ -196,6 +163,7 @@ struct OutputCode *process_expression(struct Expression *e) {
 			}
 
 		} else if (strcmp(e->op, "-") == 0) {
+
 			if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "num") == 0) {
 				/*
 				ok
@@ -411,7 +379,14 @@ struct OutputCode *process_expression(struct Expression *e) {
 			oc3 = insert(oc3, __JUMP(- tree_size - 1));
 
 			int oc3_tree_size = oc3->cmd_tree_size;
-			oc = insert(oc, __JZERO(4, oc3_tree_size + 1));
+			oc = insert(oc, __JZERO(4, 2));
+			oc = insert(oc, __JUMP(4 + 3));
+			oc = insert(oc, __ZERO(0));
+			oc = insert(oc, __INC(0));
+			oc = insert(oc, __SHL(0));
+			oc = insert(oc, __ZERO(1));
+			oc = insert(oc, __STORE(1));
+			oc = insert(oc, __JUMP(oc3_tree_size + 1));
 			oc = merge(oc, oc3);
 
 			oc = insert(oc, __ZERO(0));
@@ -958,7 +933,6 @@ struct OutputCode *command_gen(struct Command *c) {
 			__set_var_undef(c->id->name);
 			oc = merge(oc, id_addr_to_reg(c->id, 0));
 			oc = insert(oc, __GET(1));
-			__set_reg_undef(1);
 			oc = insert(oc, __STORE(1));
 		}
 
@@ -1321,16 +1295,6 @@ struct OutputCode *code_gen(struct Commands *cmds) {
 	struct OutputCode *oc = new_output_code();
 
 	if (cmds != NULL) {
-		R = malloc(sizeof(struct Registers));
-
-		for (int i = 0; i <= 4; i++) {
-			struct Register *reg = malloc(sizeof(struct Register));
-			reg->is_definite = 0;
-			reg->value = 0;
-
-			R->reg[i] = reg;
-		}
-
 		for (int i = 0; i < cmds->cmds_size; i++) {
 			oc = merge(oc, command_gen(cmds->cmds[i]));
 		}
@@ -1350,7 +1314,6 @@ struct OutputCode *fill_reg_with_num(int num, int reg) {
 	int mod;
 	int ix = 0;
 	int bin[1024];
-	int org_num = num;
 
 	f = insert(f, __ZERO(reg));
 
@@ -1374,9 +1337,6 @@ struct OutputCode *fill_reg_with_num(int num, int reg) {
 			}
 		}
 	}
-
-	R->reg[reg]->is_definite = 1;
-	R->reg[reg]->value = org_num;
 
 	return f;
 }

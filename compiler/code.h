@@ -19,15 +19,14 @@ struct RMLine {
 };
 
 typedef struct RMLine Command;
-typedef struct Registers Registers;
 
 int RM_LINE = 0;
 
 struct OutputCode *load_num_to_register(int, int);
+struct OutputCode *insert(struct OutputCode *, struct RMLine *);
 struct RMLine *cmd(char *, int);
 struct RMLine *jcmd(char *, int, int);
 struct RMLine *jscmd(char *, int);
-struct OutputCode *insert(struct OutputCode *, struct RMLine *);
 void print_line(FILE *, char *);
 
 struct OutputCode *merge(struct OutputCode *a, struct OutputCode *b) {

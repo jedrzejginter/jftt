@@ -34,12 +34,12 @@ BEGIN
 	IF c = 600 THEN SKIP; ELSE WRITE 12; ENDIF
 
 	a := 9;
-	b := 2;
+	b := 4;
 
 	c := 10 / 11;
 	IF c = 0 THEN SKIP; ELSE WRITE 13; ENDIF
 	c := a / b;
-	IF c = 4 THEN SKIP; ELSE WRITE 14; ENDIF
+	IF c = 2 THEN SKIP; ELSE WRITE 14; ENDIF
 
 	a := 10;
 	b := 0;

@@ -1,0 +1,15 @@
+{ Testowanie dzielenia }
+VAR
+	a b c
+BEGIN
+	a := 3;
+	b := 4;
+
+	c := 3 / 4; IF c = 0 THEN SKIP; ELSE WRITE 1; ENDIF
+
+	a := 10;
+	b := 0;
+
+	c := a / b; IF c = 0 THEN SKIP; ELSE WRITE 2; ENDIF
+
+END

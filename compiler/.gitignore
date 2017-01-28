@@ -3,6 +3,7 @@
 /y.*
 compiler
 interpreter
+int
 /*.imp
 /*.mr
 *.zip
