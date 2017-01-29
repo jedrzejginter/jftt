@@ -124,92 +124,50 @@ struct OutputCode *process_expression(struct Expression *e) {
 		}
 
 		if (strcmp(e->op, "+") == 0) {
-			if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "num") == 0) {
-				/*
-				ok
-				*/
-				oc = merge(oc, fill_reg_with_num(v1->num + v2->num, 1));
-
-				// Jeśli wynik dodawania wykracza poza zakres, to można zrobić to:
-				// oc = fill_reg_with_num(v1->num, 1);
-				// oc = insert(oc, __ZERO(0));
-				// oc = insert(oc, __STORE(1));
-				// oc = fill_reg_with_num(v2->num, 1);
-				// oc = insert(oc, __ADD(1));
-
-			} else if (strcmp(v1->type, "id") == 0 && strcmp(v2->type, "id") == 0) {
-				/*
-				ok
-				*/
-				oc = merge(oc, id_addr_to_reg(v1->id, 0));
+			if (strcmp(v1->type, "id") == 0) {
+				oc = id_addr_to_reg(v1->id, 0);
 				oc = insert(oc, __LOAD(1));
 
-				oc = merge(oc, id_addr_to_reg(v2->id, 0));
-				oc = insert(oc, __ADD(1));
-			} else if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "id") == 0) {
-				/*
-				ok
-				*/
-				oc = merge(oc, fill_reg_with_num(v1->num, 1));
-				oc = merge(oc, id_addr_to_reg(v2->id, 0));
-				oc = insert(oc, __ADD(1));
 			} else {
-				/*
-				ok
-				*/
-				oc = merge(oc, id_addr_to_reg(v1->id, 0));
-				oc = merge(oc, fill_reg_with_num(v2->num, 1));
-				oc = insert(oc, __ADD(1));
+				oc = fill_reg_with_num(v1->num, 1);
+
 			}
+
+			if (strcmp(v2->type, "id") == 0) {
+				oc = merge(oc, id_addr_to_reg(v2->id, 0));
+
+			} else {
+				oc = merge(oc, fill_reg_with_num(v2->num, 4));
+				oc = insert(oc, __ZERO(0));
+				oc = insert(oc, __STORE(4));
+
+			}
+
+			oc = insert(oc, __ADD(1));
+
 
 		} else if (strcmp(e->op, "-") == 0) {
-
-			if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "num") == 0) {
-				/*
-				ok
-				10 - 9
-				*/
-				val = v1->num - v2->num;
-				val = val < 0? 0 : val;
-
-				oc = merge(oc, fill_reg_with_num(val, 1));
-
-			} else if (strcmp(v1->type, "id") == 0 && strcmp(v2->type, "id") == 0) {
-				/*
-				ok
-				a - b
-				*/
-				oc = merge(oc, id_addr_to_reg(v1->id, 0));
+			if (strcmp(v1->type, "id") == 0) {
+				oc = id_addr_to_reg(v1->id, 0);
 				oc = insert(oc, __LOAD(1));
-
-				oc = merge(oc, id_addr_to_reg(v2->id, 0));
-				oc = insert(oc, __SUB(1));
-
-			} else if (strcmp(v1->type, "num") == 0 && strcmp(v2->type, "id") == 0) {
-				/*
-				ok
-				10 - a
-				*/
-				oc = merge(oc, fill_reg_with_num(v1->num, 1));
-				oc = merge(oc, id_addr_to_reg(v2->id, 0));
-				oc = insert(oc, __SUB(1));
 
 			} else {
-				/*
-				ok
-				a - 10
-				*/
-				struct Id *tmp_id = __Id("_md0", 0, NULL);
+				oc = fill_reg_with_num(v1->num, 1);
 
-				oc = merge(oc, id_addr_to_reg(v1->id, 0));
-				oc = insert(oc, __LOAD(1));
-
-				oc = merge(oc, id_addr_to_reg(tmp_id, 0));
-
-				oc = merge(oc, fill_reg_with_num(v2->num, 4));
-				oc = insert(oc, __STORE(4));
-				oc = insert(oc, __SUB(1));
 			}
+
+			if (strcmp(v2->type, "id") == 0) {
+				oc = merge(oc, id_addr_to_reg(v2->id, 0));
+
+			} else {
+				oc = merge(oc, fill_reg_with_num(v2->num, 4));
+				oc = insert(oc, __ZERO(0));
+				oc = insert(oc, __STORE(4));
+
+			}
+
+			oc = insert(oc, __SUB(1));
+
 		} else if (strcmp(e->op, "*") == 0) {
 			/*
 			OK

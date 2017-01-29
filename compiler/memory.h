@@ -2,8 +2,8 @@ struct Var {
 	char *name;				// nazwa zmiennej
 	char *type;				// typ { arr, num }
 	int size;				// rozmiar w pamięci
-	int memory_index;		// indeks w pamięci
-	int value;				// wartość
+	long long int memory_index;		// indeks w pamięci
+	long long int value;				// wartość
 	int is_mutable;		// czy można przypisać do zmiennej?
 	int is_initialized;	// czy zmienna zainicjalizowana? 0 false, 1 true
 	int is_definite;		// czy znamy wartość? 0 false, 1 true
@@ -44,7 +44,7 @@ void __insert_var_to_mem(struct Var *v) {
 }
 
 
-void __declare_var(char *name, int array_size, int is_mutable, char *type) {
+void __declare_var(char *name, long long int array_size, int is_mutable, char *type) {
 	if (__get_var(name) != NULL) {
 		__err_dup_decl(PR_LINE, name);
 
@@ -83,20 +83,5 @@ void __set_var_undef(char *name) {
 
 	if (v != NULL) {
 		v->is_definite = 0;
-	}
-}
-
-void __print_memory() {
-	struct Var *v;
-	printf("--- Memory ---\n");
-	if (mem == NULL) {
-		printf("(empty)\n");
-		return;
-	}
-
-	for (int i = 0; i < mem->size; i++) {
-		v = mem->vars[i];
-
-		printf("%d ... %s \n", v->memory_index, v->name);
 	}
 }

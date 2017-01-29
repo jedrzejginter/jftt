@@ -1,0 +1,9 @@
+VAR
+	a b
+BEGIN
+	READ a;
+	b := a - a; WRITE b;
+	b := 10 - a; WRITE b;
+	b := a - 10; WRITE b;
+	b := a - 3; WRITE b;
+END

@@ -18,7 +18,7 @@ char *output_file;
 
 %}
 %union {
-	int num;
+	long long int num;
 	char *var;
 	struct Declarations *vdec;
 	struct Id *id;

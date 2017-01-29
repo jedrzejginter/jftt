@@ -1,5 +1,5 @@
 
-struct Id *__Id(char *name, int index_num, char *index_id) {
+struct Id *__Id(char *name, long long int index_num, char *index_id) {
 	struct Id *e = malloc(sizeof(struct Id));
 
 	e->name = name;
@@ -15,7 +15,7 @@ struct Id *__Id(char *name, int index_num, char *index_id) {
 	return e;
 }
 
-struct Value *__Value(char *type, int num, struct Id *id) {
+struct Value *__Value(char *type, long long int num, struct Id *id) {
 	struct Value *e = malloc(sizeof(struct Value));
 
 	e->type = type;

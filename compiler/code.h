@@ -3,8 +3,8 @@ struct OutputCode {
 	char *type;
 	char *name;
 	int value;
-	struct RMLine *cmd_tree[1024];
-	struct RMLine *add_cmd_tree[1024];
+	struct RMLine *cmd_tree[10000];
+	struct RMLine *add_cmd_tree[10000];
 	int cmd_tree_size;
 	int add_cmd_tree_size;
 	int swap_blocks;
@@ -22,7 +22,7 @@ typedef struct RMLine Command;
 
 int RM_LINE = 0;
 
-struct OutputCode *load_num_to_register(int, int);
+//struct OutputCode *load_num_to_register(long long int, int);
 struct OutputCode *insert(struct OutputCode *, struct RMLine *);
 struct RMLine *cmd(char *, int);
 struct RMLine *jcmd(char *, int, int);

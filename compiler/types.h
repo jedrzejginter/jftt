@@ -2,7 +2,7 @@
 struct Id {
 	char *name;			// nazwa zmiennej np `dzielnik`
 	char *index_id;	// name[indexId] np `tab[a]`
-	int index_num;		// name[indexNum] np `tab[10]`
+	long long int index_num;	// name[indexNum] np `tab[10]`
 	char *type;			// typ: num, arr
 	int ln;
 };
@@ -10,7 +10,7 @@ struct Id {
 struct Value {
 	char *type;		// typ wartości: { num, id }
 	struct Id *id;	// wskaźnik na wartość, jeśli type == id, else: NULL
-	int num;			// wartość jako int, jeśli type == num
+	long long int num;	// wartość jako int, jeśli type == num
 	int ln;			// numer linii w której występuje wartość
 };
 
@@ -30,7 +30,7 @@ struct Commands {
 	int size;					// ilość komend
 	struct Command *root;	// pierwsza komenda
 	struct Command *last;	// ostatnia komenda
-	struct Command *cmds[4096];	// lista komend zagnieżdżonych
+	struct Command *cmds[10000];	// lista komend zagnieżdżonych
 	int cmds_size;				// liczba komend
 };
 

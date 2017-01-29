@@ -58,12 +58,11 @@ struct RMLine *__JUMP(int reg) {
 	return jscmd("JUMP", reg);
 }
 
-struct OutputCode *load_num_to_register(int num, int reg) {
+struct OutputCode *load_num_to_register(long long int num, int reg) {
 	struct OutputCode *oc = malloc(sizeof(struct OutputCode));
-	int mod;
-	int ix = 0;
-	int bin[1024];
-	int org_num = num;
+	long long int mod;
+	long long int ix = 0;
+	int bin[10000];
 
 	oc->cmd_tree_size = 0;
 	oc->add_cmd_tree_size = 0;
